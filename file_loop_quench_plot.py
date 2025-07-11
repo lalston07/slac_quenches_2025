@@ -35,7 +35,7 @@ for file in quench_files:
     filename = file.split("\\", 4)[-1].replace('.txt','') 
     print(filename)
     parts = filename.split('_') # splits the filename into parts at each '_'
-    pv_base = parts[0] + ":" + parts[1] + ":" + parts[2]    # ex: pt(1): ACCL, pt(2): L3B, pt(3):3180
+    pv_base = parts[0] + ":" + parts[1] + ":" + parts[2]    # ex: pt(0): ACCL, pt(1): L3B, pt(2):3180
     timestamp_raw = parts[3] + "_" + parts[4]               # ex: pt(3): 20221028, pt(4): 235218
     # line below formats the timestamp to match the file layout
     timestamp = datetime.strptime(timestamp_raw, "%Y%m%d_%H%M%S").strftime("%Y-%m-%d_%H:%M:%S.")
@@ -87,12 +87,12 @@ for file in quench_files:
     # plotting the data together
     if "ACCL_L3B_3180_20240509_143717_QUENCH.txt" in file or "ACCL_L3B_3180_20241002_151904_QUENCH.txt" in file:
         plt.figure(figsize=(14,6))
-        plt.plot(time_data, cavity_data, label="Cavity", color='blue', linewidth=3)
-        plt.plot(time_data, forward_data, label="Forward Power", color='green', linewidth=3)
-        plt.plot(time_data, reverse_data, label="Reverse Power", color='red', linewidth=3)
-        plt.plot(time_data, decay_data, label="Decay Reference", color='cyan', linewidth=1)
-        plt.xlabel("Sample Index")
-        plt.ylabel("Amplitude (MV)")
+        plt.plot(time_data, cavity_data, label="Cavity (MV)", color='blue', linewidth=3)
+        plt.plot(time_data, forward_data, label="Forward Power (W)", color='green', linewidth=3)
+        plt.plot(time_data, reverse_data, label="Reverse Power (W)", color='red', linewidth=3)
+        plt.plot(time_data, decay_data, label="Decay Reference (MV)", color='cyan', linewidth=1)
+        plt.xlabel("Time in Seconds")
+        plt.ylabel("Amplitude")
         plt.title(f"Cavity Quench Waveform for {cavity_faultname} {cavity_time}")
         plt.grid(True)
         plt.legend()
