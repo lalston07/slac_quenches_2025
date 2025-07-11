@@ -18,6 +18,8 @@ for file in quench_files:
     # line below splits the file in to 4 parts (after the '\') and gets the last part (filename)
     filename = file.split("\\", 4)[-1].replace('.txt','') 
     parts = filename.split('_') # splits the filename into parts at each '_'
+    CM_name = parts[2][:2]
+    CAV_name = parts[2][-2]
     timestamp_raw = parts[3]   # ex: pt(3): 20221028, pt(4): 235218
     # line below formats the timestamp to match the file layout
     timestamp = datetime.strptime(timestamp_raw, "%Y%m%d")
@@ -40,12 +42,12 @@ print(quench_frequency)
 # step five - plot the quench frequency data
 # x-axis is months and y-axis is number of quench files per month
 plt.figure(figsize=(12,6))
-quench_frequency.plot(kind='bar', color='blue') # automatically uses periods as x-axis
-plt.xlabel("Month") # MAKE FONT BIGGER
-plt.ylabel("Number of Quenches")
-plt.title("Quench Frequency Over Time")
-plt.grid(True)  # MAKE GRID GO TO BACK
+ax = quench_frequency.plot(kind='bar', color='blue', label = f"CM: {CM_name}, CAV: {CAV_name}") 
+ax.set_xlabel("Month", fontsize=14)
+ax.set_ylabel("Number of Quenches", fontsize=14)
+ax.set_title("Quench Frequency Over Time", fontsize=14)
+ax.grid(True)  
+ax.set_axisbelow(True) # makes grid go to back
+ax.legend() # adds legend for cryomodle and cavity number
 plt.tight_layout()
 plt.show()
-
-# ADD LEDGEND FOR CRYO MODULE AND CAVITY
