@@ -137,11 +137,11 @@ for file in quench_files:
 
     # running validation
     # frequency is fixed value (1.3 GHz) and saved_loaded_q varies for each file
-    is_real = validate_quench(cavity_data, time_data, saved_loaded_q=q_data[0], frequency=freq_data[0])  
+    classification = validate_quench(cavity_data, time_data, saved_loaded_q=q_data[0], frequency=freq_data[0])  
     # results.append({"filename": f"{filename}.txt", "timestamp": cavity_time, "real_quench": is_real})
-    results.append({"filename": f"{filename}.txt", "waveform_data": cavity_data, "Q_0": q_data, "real quench": is_real})
+    results.append({"filename": f"{filename}.txt", "waveform_data": cavity_data, "Q_0": q_data, "real quench": classification})
 
-    if is_real:
+    if classification:
         count_true += 1
         real_quenches.append(filename)
     else:
