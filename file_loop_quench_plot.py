@@ -85,21 +85,41 @@ for file in quench_files:
     forward_data = forward_data[:len(cavity_data)] 
 
     # plotting the data together
-    if "ACCL_L3B_3180_20240509_143717_QUENCH.txt" in file or "ACCL_L3B_3180_20241002_151904_QUENCH.txt" in file:
-        plt.figure(figsize=(14,6))
-        plt.plot(time_data, cavity_data, label="Cavity (MV)", color='blue', linewidth=3)
-        plt.plot(time_data, forward_data, label="Forward Power (W)", color='green', linewidth=3)
-        plt.plot(time_data, reverse_data, label="Reverse Power (W)", color='red', linewidth=3)
-        plt.plot(time_data, decay_data, label="Decay Reference (MV)", color='cyan', linewidth=1)
-        plt.xlabel("Time in Seconds")
-        plt.ylabel("Amplitude")
-        plt.title(f"Cavity Quench Waveform for {cavity_faultname} {cavity_time}")
-        plt.grid(True)
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
+    # plotting data on the same axis
+    plt.figure(figsize=(14,6))
+    plt.plot(time_data, cavity_data, label="Cavity (MV)", color='blue', linewidth=4)
+    plt.plot(time_data, forward_data, label="Forward Power (W^2)", color='green', linewidth=3)
+    plt.plot(time_data, reverse_data, label="Reverse Power (W^2)", color='red', linewidth=3)
+    plt.plot(time_data, decay_data, label="Decay Reference (MV)", color='cyan', linewidth=1, linestyle='--')
+    plt.xlabel("Time in Seconds")
+    plt.ylabel("Amplitude")
+    plt.title(f"Cavity Quench Waveform for {cavity_faultname} {cavity_time}")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
-print(f"Files where forward data is greater than cavity data: {data_long}")
+    # # plotting the data on two separate y-axis for MV and sqrt(W)
+    # fig, ax1 = plt.subplots()
+    # ax1.set_xlabel('Time in Seconds')   # First y-axis (MV)
+    # ax1.set_ylabel('Amplitude in MV', color='black')
+    # ax1.plot(time_data, cavity_data, label="Cavity (MV)", color='blue', linewidth=3)
+    # ax1.plot(time_data, decay_data, label="Decay Reference", color='cyan', linewidth=1, linestyle='--')
+    # ax1.tick_params(axis='y', labelcolor='black')
+    # # ax1.set_ylim(-1, 23)
+    # # ax1.grid(True, linewidth=0.5)
+    # ax2 = ax1.twinx()   # Second y-axis (W^2)
+    # ax2.set_ylabel('Amplitude in W^2', color='black')
+    # ax2.plot(time_data, forward_data, label="Forward Power (W^2)", color='red', linewidth=2)
+    # ax2.plot(time_data, reverse_data, label="Reverse Power(W^2)", color="green", linewidth=2)
+    # ax2.tick_params(axis='y', labelcolor='black')
+    # # ax2.set_ylim(-1, 65)
+    # fig.legend(loc='upper right', bbox_to_anchor=(0.9, 0.9))    # Combining the legends for both y-axes
+    # fig.suptitle(f"Cavity Quench Waveform for {cavity_faultname} {cavity_time}", fontsize=14)
+    # fig.tight_layout()
+    # plt.show()
+
+# print(f"Files where forward data is greater than cavity data: {data_long}")
 
 
 
