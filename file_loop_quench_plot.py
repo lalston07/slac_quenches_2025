@@ -7,6 +7,7 @@ import re
 import time
 from datetime import datetime
 import pandas as pd
+import h5py
 
 # to extract data using a directory:
 directory_path = r"G:\My Drive\ACCL_L3B_3180"
@@ -25,79 +26,94 @@ quench_files = [f for f in results if re.search(r"\d+_QUENCH", f)]
 print(f"Found {len(quench_files)} matching '##_QUENCH' text files:")
 print(quench_files)
 
+# creating a function to extract the waveform data and timestamps from each file
+def extracting_data(path_name, faultname): 
+    with open(path_name, 'r') as file:
+        for line in file: 
+            if f"{faultname}" in line and f"{faultname}." not in line: 
+                data = pd.Series(line.split())
+                target_timestamp = line.split()[1]  # searching for timestamp in case it varies
+                values = data[2:].astype(float).values
+
+                print(f"{faultname} Information:")
+                print(f"Length of data: {len(values)}")
+                print(f"First value: {values[0]}, Last value: {values[-1]}")
+                print(f"Min value: {np.min(values)}, Max value: {np.max(values)}\n")
+
+                return values, target_timestamp
+    return None, None   # added in case the PV line is not found
+
+# saving data to an HDF5 file - cavity amplitude, forward power, reverse power, decay reference, faultname, timestamp, filename, cryomodule, and cavity number
+output_filename = 'cavity_quench_data_google_drive.h5'
 data_long=[]
 
-for file in quench_files: 
-    print("\nProcessing file: " + file)
+with h5py.File(output_filename, 'w') as h5file: 
+    for i, file in enumerate(quench_files):
+        print("\nProcessing file: " + file)
+        
+        # getting PV and timestamp information from {file}
+        # line below splits the file in to 4 parts (after the '\') and gets the last part (filename)
+        filename = file.split("\\", 4)[-1].replace('.txt','') 
+        parts = filename.split('_') # splits the filename into parts at each '_'
+        pv_base = parts[0] + ":" + parts[1] + ":" + parts[2]    # ex: pt(0): ACCL, pt(1): L3B, pt(2):3180
+        timestamp_raw = parts[3] + "_" + parts[4]               # ex: pt(3): 20221028, pt(4): 235218
+        # line below formats the timestamp to match the file layout
+        timestamp = datetime.strptime(timestamp_raw, "%Y%m%d_%H%M%S").strftime("%Y-%m-%d_%H:%M:%S.")
+        print("PV label: " + pv_base)
+        print("Timestamp: " + timestamp + "\n")
+
+        # constructing PV label strings
+        cavity_faultname = pv_base + ':CAV:FLTAWF'  # ex: ACCL:L3B:3180:CAV:FLTAWF
+        forward_pow = pv_base + ':FWD:FLTAWF'       # ex: ACCL:L3B:3180:FWD:FLTAWF
+        reverse_pow = pv_base + ':REV:FLTAWF'       # ex: ACCL:L3B:3180:REV:FLTAWF
+        decay_ref = pv_base + ':DECAYREFWF'         # ex: ACCL:L3B:3180:DECAYREFWF    
+        time_range = pv_base + ':CAV:FLTTWF'         # ex: ACCL:L3B:3180:CAV:FLTTWF
+
+        # extracting all data for quench waveform using defined function
+        cavity_data, cavity_time = extracting_data(file, cavity_faultname)
+        forward_data, forward_time = extracting_data(file, forward_pow)
+        reverse_data, reverse_time = extracting_data(file, reverse_pow)
+        decay_data, decay_time = extracting_data(file, decay_ref)
+        time_data, time_timestamp = extracting_data(file, time_range)
+
+        # making them all the same length in case the length varies
+        if len(forward_data) > len(cavity_data):
+            data_long.append(f"{filename}.txt")
+        forward_data = forward_data[:len(cavity_data)]
     
-    # getting PV and timestamp information from {file}
-    # line below splits the file in to 4 parts (after the '\') and gets the last part (filename)
-    filename = file.split("\\", 4)[-1].replace('.txt','') 
-    print(filename)
-    parts = filename.split('_') # splits the filename into parts at each '_'
-    pv_base = parts[0] + ":" + parts[1] + ":" + parts[2]    # ex: pt(0): ACCL, pt(1): L3B, pt(2):3180
-    timestamp_raw = parts[3] + "_" + parts[4]               # ex: pt(3): 20221028, pt(4): 235218
-    # line below formats the timestamp to match the file layout
-    timestamp = datetime.strptime(timestamp_raw, "%Y%m%d_%H%M%S").strftime("%Y-%m-%d_%H:%M:%S.")
-    print("PV label: " + pv_base)
-    print("Timestamp: " + timestamp + "\n")
+        # making each file have a unique group name
+        group_name = f"quench_{i:03d}"
+        group = h5file.create_group(group_name)
 
-    # constructing PV label strings
-    cavity_faultname = pv_base + ':CAV:FLTAWF'  # ex: ACCL:L3B:3180:CAV:FLTAWF
-    forward_pow = pv_base + ':FWD:FLTAWF'       # ex: ACCL:L3B:3180:FWD:FLTAWF
-    reverse_pow = pv_base + ':REV:FLTAWF'       # ex: ACCL:L3B:3180:REV:FLTAWF
-    decay_ref = pv_base + ':DECAYREFWF'         # ex: ACCL:L3B:3180:DECAYREFWF    
-    time_range = pv_base + ':CAV:FLTTWF'         # ex: ACCL:L3B:3180:CAV:FLTTWF
+        # saving waveform data into the group
+        group.create_dataset('time_seconds', data=time_data)
+        group.create_dataset('cavity_amplitude_MV', data=cavity_data)
+        group.create_dataset('forward_power_W2', data=forward_data)
+        group.create_dataset('reverse_power_W2', data=reverse_data)
+        group.create_dataset('decay_reference_MV', data=decay_data)
 
-    # creating a function to extract the waveform data and timestamps from each file
-    def extracting_data(path_name, faultname): 
-        with open(path_name, 'r') as file:
-            for line in file: 
-                if f"{faultname}" in line and f"{faultname}." not in line: 
-                    data = pd.Series(line.split())
-                    target_timestamp = line.split()[1]  # searching for timestamp in case it varies
-                    values = data[2:].astype(float).values
+        # saving metadata as attributes
+        group.attrs['filename'] = f"{filename}.txt"
+        group.attrs['timestamp'] = cavity_time
+        group.attrs['faultname'] = cavity_faultname
+        group.attrs['cavity_number'] = parts[2][2]
+        group.attrs['cryomodule'] = parts[2][:2] 
 
-                    print(f"{faultname} Information:")
-                    print(f"Length of data: {len(values)}")
-                    print(f"First value: {values[0]}, Last value: {values[-1]}")
-                    print(f"Min value: {np.min(values)}, Max value: {np.max(values)}\n")
-
-                    return values, target_timestamp
-        return None, None   # added in case the PV line is not found
-    
-    # extract each waveform using defined function
-    cavity_data, cavity_time = extracting_data(file, cavity_faultname)
-    forward_data, forward_time = extracting_data(file, forward_pow)
-    reverse_data, reverse_time = extracting_data(file, reverse_pow)
-    decay_data, decay_time = extracting_data(file, decay_ref)
-    time_data, time_timestamp = extracting_data(file, time_range)
- 
-    # used for the following files because there is more forward_data than cavity_data which leads to error: 
-    # ['ACCL_L3B_3180_20240509_143717_QUENCH.txt', 
-    # 'ACCL_L3B_3180_20240509_144621_QUENCH.txt', 
-    # 'ACCL_L3B_3180_20240509_143712_QUENCH.txt', 
-    # 'ACCL_L3B_3180_20240509_143606_QUENCH.txt', 
-    # 'ACCL_L3B_3180_20240509_143700_QUENCH.txt']
-
-    if len(forward_data) > len(cavity_data):
-        data_long.append(f"{filename}.txt")
-    forward_data = forward_data[:len(cavity_data)] 
-
-    # plotting the data together
-    # plotting data on the same axis
-    plt.figure(figsize=(14,6))
-    plt.plot(time_data, cavity_data, label="Cavity (MV)", color='blue', linewidth=4)
-    plt.plot(time_data, forward_data, label="Forward Power (W^2)", color='green', linewidth=3)
-    plt.plot(time_data, reverse_data, label="Reverse Power (W^2)", color='red', linewidth=3)
-    plt.plot(time_data, decay_data, label="Decay Reference (MV)", color='cyan', linewidth=1, linestyle='--')
-    plt.xlabel("Time in Seconds")
-    plt.ylabel("Amplitude")
-    plt.title(f"Cavity Quench Waveform for {cavity_faultname} {cavity_time}")
-    plt.grid(True)
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+    # # plotting the data together
+    # # plotting data on the same axis
+    # plt.figure(figsize=(14,6))
+    # plt.plot(time_data, cavity_data, label="Cavity (MV)", color='blue', linewidth=4)
+    # plt.plot(time_data, forward_data, label="Forward Power (W^2)", color='green', linewidth=3)
+    # plt.plot(time_data, reverse_data, label="Reverse Power (W^2)", color='red', linewidth=3)
+    # plt.plot(time_data, decay_data, label="Decay Reference (MV)", color='cyan', linewidth=1, linestyle='--')
+    # plt.xlabel("Time in Seconds")
+    # plt.ylabel("Amplitude")
+    # plt.title(f"Cavity Quench Waveform for {cavity_faultname} {cavity_time}")
+    # plt.grid(True)
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.show()
+    # plt.close()
 
     # # plotting the data on two separate y-axis for MV and sqrt(W)
     # fig, ax1 = plt.subplots()
@@ -118,9 +134,10 @@ for file in quench_files:
     # fig.suptitle(f"Cavity Quench Waveform for {cavity_faultname} {cavity_time}", fontsize=14)
     # fig.tight_layout()
     # plt.show()
+    # plt.close()
 
 # print(f"Files where forward data is greater than cavity data: {data_long}")
-
+print(f"Data from {len(quench_files)} successfully saved to {output_filename}.")
 
 
 
