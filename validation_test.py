@@ -39,6 +39,45 @@ def extracting_data(path_name, faultname):
                 return values, target_timestamp
     return None, None   # added in case the PV line is not found
 
+# def calculating_fit_error(fault_data, time_data, frequency, q_loaded):
+#     """
+#     Calculates how well the exponential fit A(t) = A0 * exp(-pi*f*t / Q) matches the waveform data.
+#     Returns error metrics like MSE, RMSE, and residuals.
+#     """
+
+#     # making sure the inputs are NumPy arrays
+#     fault_data = np.array(fault_data)
+#     time_data = np.array(time_data)
+
+#     # removing negative or zero amplitudes
+#     valid_indices = fault_data > 0
+#     fault_data = fault_data[valid_indices]
+#     time_data = time_data[valid_indices]
+
+#     # generating fitted data from exponential model
+#     A0 = fault_data[0]
+#     fitted_curve = A0 * np.exp((-np.pi * frequency * time_data) / q_loaded)
+
+#     # computing residuals and errors
+#     residuals = fault_data - fitted_curve
+#     mse = np.mean(residuals ** 2)
+#     rmse = np.sqrt(mse)
+#     mae = np.mean(np.abs(residuals))
+#     r2 = 1 - np.sum(residuals**2) / np.sum((fault_data - np.mean(fault_data))**2)
+
+#     print("\nFit Error Metrics:")
+#     print(f"    MAE = {mae:.4e}")
+#     print(f"    MSE = {mse:.4e}")
+#     print(f"    RMSE = {rmse:.4e}")
+#     print(f"    R^2 = {r2:.4f}")
+
+#     return {'residuals': residuals, 
+#             'mse': mse, 
+#             'rmse': rmse, 
+#             'mae': mae, 
+#             'r2': r2, 
+#             'fitted_curve': fitted_curve}
+
 # re-writing Lisa's function to validate the quenches (real vs fake)
 def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_update: bool=False, logger=None):
     """
@@ -94,7 +133,38 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_u
     is_real = loaded_q < thresh_for_quench
     print(f"Validation: {is_real}")
     
-    return is_real
+    """
+    CALCULATION OF FITTING ERROR
+    Calculates how well the exponential fit A(t) = A0 * exp(-pi*f*t / Q) matches the waveform data.
+    Returns error metrics like MSE, RMSE, and residuals.
+    """
+    # fitted_amplitude is created using the dacay rate (exponential term) that we got from np.polyfit
+    fitted_amplitude = pre_quench_amp * np.exp(-exponential_term * time_data)
+
+    # error metrics to compare the fault_data to the model
+    residuals = fault_data - fitted_amplitude
+    mse = np.mean(residuals**2)
+    rmse = np.sqrt(mse)
+    r2 = 1 - ( np.sum(residuals**2) / np.sum((fault_data - np.mean(fault_data))**2) )
+
+    print("\nFit Error Metrics From Polyfit Method: ")
+    print(f"RMSE = {rmse:.4e}")
+    print(f"R^2 = {r2:.4f}")
+
+    # # plotting the fit over the raw cavity amplitude data
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
+    # plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
+    # plt.xlabel("Time in Seconds")
+    # plt.ylabel("Amplitude")
+    # plt.title("Exponential Fit vs Raw Amplitude")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.show()
+    # plt.close()
+
+    return is_real, rmse, r2
 
 # initializations before file loop
 real_quenches = []
@@ -137,9 +207,9 @@ for file in quench_files:
 
     # running validation
     # frequency is fixed value (1.3 GHz) and saved_loaded_q varies for each file
-    classification = validate_quench(cavity_data, time_data, saved_loaded_q=q_data[0], frequency=freq_data[0])  
+    classification, rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_data[0], frequency=freq_data[0])
     # results.append({"filename": f"{filename}.txt", "timestamp": cavity_time, "real_quench": is_real})
-    results.append({"filename": f"{filename}.txt", "waveform_data": cavity_data, "Q_0": q_data, "real quench": classification})
+    results.append({"filename": f"{filename}.txt", "waveform_data": cavity_data, "Q_0": q_data, "real quench": classification, "root_mean_sqaured_error": rmse, "r_squared_score": r2})
 
     if classification:
         count_true += 1
@@ -156,7 +226,7 @@ validation_results = pd.DataFrame(results)
 # print("Saved results to quench_validation_results.txt")
 
 # saving results from all files as column separated .csv file
-# validation_results.to_csv("quench_validation_results.csv", index=False)
+validation_results.to_csv("quench_validation_error.csv", index=False)
 print(f"Number of fake quenches: {count_false}, and number of real quenches: {count_true}")
 print(f"Real Quench Files: {real_quenches}")
-print("Saved results to quench_validation_results.csv")
+print("Saved results to quench_validation_error.csv")
