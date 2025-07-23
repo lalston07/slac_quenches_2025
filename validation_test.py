@@ -7,7 +7,6 @@ import re
 import time
 from datetime import datetime
 import pandas as pd
-import sklearn.metrics
 
 # to extract data using a directory:
 directory_path = r"G:\My Drive\ACCL_L3B_3180"
@@ -100,20 +99,23 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_u
     # fitted_amplitude is created using the dacay rate (exponential term) that we got from np.polyfit
     fitted_amplitude = pre_quench_amp * np.exp(-exponential_term * time_data)
 
-    # error metrics using functions
-    # residuals = fault_data - fitted_amplitude
-    # mse = np.mean(residuals**2)
-    # rmse = np.sqrt(mse)
-    # r2 = 1 - ( np.sum(residuals**2) / np.sum((fault_data - np.mean(fault_data))**2) )
-
-    # error metrics using sklearn methods
+    # error metrics using sklearn methods (import sklearn.metrics)
     # rmse = np.sqrt(sklearn.metrics.mean_squared_error(fault_data, fitted amplitude))
-    rmse = sklearn.metrics.root_mean_squared_error(fault_data, fitted_amplitude)
-    r2 = sklearn.metrics.r2_score(fault_data, fitted_amplitude)
+    # rmse = sklearn.metrics.root_mean_squared_error(fault_data, fitted_amplitude)
+    # r2 = sklearn.metrics.r2_score(fault_data, fitted_amplitude)
+
+    # error metrics using numpy
+    rmse = np.sqrt(np.mean((fault_data - fitted_amplitude)**2))
+    r2 = 1 - (np.sum((fault_data - fitted_amplitude)**2) / np.sum((fault_data - np.mean(fault_data))**2))
+    
+    # error metrics using np.corrcoef
+    # correlation_matrix = np.corrcoef(fault_data, fitted_amplitude)
+    # correlation = correlation_matrix[0, 1]
+    # r2 = correlation**2
 
     print("\nFit Error Metrics From Polyfit Method: ")
-    print(f"RMSE = {rmse:.4e}")
-    print(f"R^2 = {r2:.4f}")
+    print(f"RMSE = {rmse}")
+    print(f"R^2 = {r2}")
 
     # # plotting the fit over the raw cavity amplitude data
     # plt.figure(figsize=(8, 5))
@@ -191,6 +193,16 @@ for file in quench_files:
     
 # converting results list to DataFrame
 validation_results = pd.DataFrame(results)
+
+# convering filename_list to a datatime object
+timestamp_label = []
+classification_label = []
+for ts_label in filename_list:
+    ts_part, class_part = ts_label.split(" - ")
+    ts_part = ts_part.rstrip(".")
+    timestamp_label.append(datetime.strptime(ts_part, "%Y-%m-%d_%H:%M:%S"))
+    classification_label.append(class_part)
+    
 
 # # saving results from all files as tab-separated .txt file
 # validation_results.to_csv("quench_validation_results.txt", sep='\t', index=False)
