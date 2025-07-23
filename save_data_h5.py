@@ -10,10 +10,7 @@ directory_path = r"G:\My Drive\ACCL_L3B_3180"
 
 # print all of the file names with "_QUENCH" in the folder using a loop (using glob module)
 results = glob.glob(directory_path + '/**/*QUENCH.txt', recursive=True) # force this to have a number before _QUENCH
-print(f"Found {len(results)} matching QUENCH text files:")
 quench_files = [f for f in results if re.search(r"\d+_QUENCH", f)]
-print(f"Found {len(quench_files)} matching '##_QUENCH' text files:")
-print(quench_files)
 
 # creating a function to extract the waveform data and timestamps from each file
 def extracting_data(path_name, faultname): 
@@ -27,7 +24,7 @@ def extracting_data(path_name, faultname):
     return None, None
 
 # saving waveform and metadata to an HDF5 file
-output_filename = 'cavity_quench_data_google_drive.h5'
+output_filename = 'cavity_quench_data_google_drive_v2.h5'
 
 # this block of code is for saving waveform data to an HDF5 file
 with h5py.File(output_filename, 'w') as h5file: 
@@ -35,7 +32,7 @@ with h5py.File(output_filename, 'w') as h5file:
         print("\nProcessing file: " + file)
         
         # getting PV and timestamp information from the file
-        filename = file.split("\\", 4)[-1].replace('.txt','') 
+        filename = file.split("\\", 4)[-1] 
         parts = filename.split('_')
         pv_base = parts[0] + ":" + parts[1] + ":" + parts[2]
         timestamp_raw = parts[3] + "_" + parts[4]
@@ -70,21 +67,9 @@ with h5py.File(output_filename, 'w') as h5file:
         group.create_dataset('decay_reference_MV', data=decay_data)
 
         # saving metadata as attributes
-        group.attrs['filename'] = f"{filename}.txt"
+        group.attrs['filename'] = f"{filename}"
         group.attrs['timestamp'] = cavity_time
         group.attrs['faultname'] = cavity_faultname
         group.attrs['cavity_number'] = parts[2][2]
         group.attrs['cryomodule'] = parts[2][:2] 
 print(f"Data from {len(quench_files)} successfully saved to {output_filename}.")
-
-"""
-# this function prints the quench file number and prints the dataset names and attributes for each file
-with h5py.File("cavity_quench_data_google_drive.h5", "r") as file: 
-    def print_h5_structure(name, object):
-        print(name)
-        if object.attrs:
-            print("  Attributes:")
-            for key, value in object.attrs.items():
-                print(f"    {key}: {value}")
-    file.visititems(print_h5_structure)
-"""
