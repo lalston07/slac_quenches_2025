@@ -7,9 +7,7 @@ import re
 import time
 from datetime import datetime
 import pandas as pd
-# import statement for LOADED_Q_CHANGE_FOR_QUENCH in valdate_quench function from Lisa's code
-# from applications.quench_processing.quench_utils import LOADED_Q_CHANGE_FOR_QUENCH
-# LOADED_Q_CHANGE_FOR_QUENCH = 0.6
+import sklearn.metrics
 
 # to extract data using a directory:
 directory_path = r"G:\My Drive\ACCL_L3B_3180"
@@ -38,45 +36,6 @@ def extracting_data(path_name, faultname):
 
                 return values, target_timestamp
     return None, None   # added in case the PV line is not found
-
-# def calculating_fit_error(fault_data, time_data, frequency, q_loaded):
-#     """
-#     Calculates how well the exponential fit A(t) = A0 * exp(-pi*f*t / Q) matches the waveform data.
-#     Returns error metrics like MSE, RMSE, and residuals.
-#     """
-
-#     # making sure the inputs are NumPy arrays
-#     fault_data = np.array(fault_data)
-#     time_data = np.array(time_data)
-
-#     # removing negative or zero amplitudes
-#     valid_indices = fault_data > 0
-#     fault_data = fault_data[valid_indices]
-#     time_data = time_data[valid_indices]
-
-#     # generating fitted data from exponential model
-#     A0 = fault_data[0]
-#     fitted_curve = A0 * np.exp((-np.pi * frequency * time_data) / q_loaded)
-
-#     # computing residuals and errors
-#     residuals = fault_data - fitted_curve
-#     mse = np.mean(residuals ** 2)
-#     rmse = np.sqrt(mse)
-#     mae = np.mean(np.abs(residuals))
-#     r2 = 1 - np.sum(residuals**2) / np.sum((fault_data - np.mean(fault_data))**2)
-
-#     print("\nFit Error Metrics:")
-#     print(f"    MAE = {mae:.4e}")
-#     print(f"    MSE = {mse:.4e}")
-#     print(f"    RMSE = {rmse:.4e}")
-#     print(f"    R^2 = {r2:.4f}")
-
-#     return {'residuals': residuals, 
-#             'mse': mse, 
-#             'rmse': rmse, 
-#             'mae': mae, 
-#             'r2': r2, 
-#             'fitted_curve': fitted_curve}
 
 # re-writing Lisa's function to validate the quenches (real vs fake)
 def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_update: bool=False, logger=None):
@@ -119,7 +78,7 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_u
     fault_data = fault_data[:end_decay]
     time_data = time_data[:end_decay]
 
-    pre_quench_amp = fault_data[0]  # pre-quench amplitude
+    pre_quench_amp = fault_data[0]
 
     exponential_term = np.polyfit(time_data, np.log(pre_quench_amp / fault_data), 1)[0]
     loaded_q = (np.pi * frequency) / exponential_term
@@ -141,11 +100,16 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_u
     # fitted_amplitude is created using the dacay rate (exponential term) that we got from np.polyfit
     fitted_amplitude = pre_quench_amp * np.exp(-exponential_term * time_data)
 
-    # error metrics to compare the fault_data to the model
-    residuals = fault_data - fitted_amplitude
-    mse = np.mean(residuals**2)
-    rmse = np.sqrt(mse)
-    r2 = 1 - ( np.sum(residuals**2) / np.sum((fault_data - np.mean(fault_data))**2) )
+    # error metrics using functions
+    # residuals = fault_data - fitted_amplitude
+    # mse = np.mean(residuals**2)
+    # rmse = np.sqrt(mse)
+    # r2 = 1 - ( np.sum(residuals**2) / np.sum((fault_data - np.mean(fault_data))**2) )
+
+    # error metrics using sklearn methods
+    # rmse = np.sqrt(sklearn.metrics.mean_squared_error(fault_data, fitted amplitude))
+    rmse = sklearn.metrics.root_mean_squared_error(fault_data, fitted_amplitude)
+    r2 = sklearn.metrics.r2_score(fault_data, fitted_amplitude)
 
     print("\nFit Error Metrics From Polyfit Method: ")
     print(f"RMSE = {rmse:.4e}")
@@ -171,6 +135,9 @@ real_quenches = []
 results = []
 count_false = 0
 count_true = 0
+rsme_values = []
+r2_values = []
+filename_list = []
 
 for file in quench_files: 
     print("\nProcessing file: " + file)
@@ -208,6 +175,9 @@ for file in quench_files:
     # running validation
     # frequency is fixed value (1.3 GHz) and saved_loaded_q varies for each file
     classification, rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_data[0], frequency=freq_data[0])
+    rsme_values.append(rmse)
+    r2_values.append(r2)
+    
     # results.append({"filename": f"{filename}.txt", "timestamp": cavity_time, "real_quench": is_real})
     results.append({"filename": f"{filename}.txt", "waveform_data": cavity_data, "Q_0": q_data, "real quench": classification, "root_mean_sqaured_error": rmse, "r_squared_score": r2})
 
@@ -216,6 +186,8 @@ for file in quench_files:
         real_quenches.append(filename)
     else:
         count_false += 1
+
+    filename_list.append(f"{timestamp} - {classification}")
     
 # converting results list to DataFrame
 validation_results = pd.DataFrame(results)
@@ -226,7 +198,30 @@ validation_results = pd.DataFrame(results)
 # print("Saved results to quench_validation_results.txt")
 
 # saving results from all files as column separated .csv file
-validation_results.to_csv("quench_validation_error.csv", index=False)
+# validation_results.to_csv("quench_validation_error.csv", index=False)
 print(f"Number of fake quenches: {count_false}, and number of real quenches: {count_true}")
 print(f"Real Quench Files: {real_quenches}")
-print("Saved results to quench_validation_error.csv")
+# print("Saved results to quench_validation_error.csv")
+
+# plotting RMSE values 
+fig, ax1 = plt.subplots(figsize=(14,6))
+ax1.set_xlabel('Quench Timestamp and Classification', fontsize=14)
+ax1.set_ylabel('RMSE Value', color='blue', fontsize=14)
+ax1.plot(filename_list, rsme_values, marker='o', color='blue', label='RMSE Values')
+ax1.tick_params(axis='y', labelcolor='blue')
+plt.xticks(rotation=90)
+ax1.grid(True, linestyle='--')
+
+# plotting R² values
+ax2 = ax1.twinx()
+ax2.set_ylabel('R² Value', color='darkorange', fontsize=14)
+ax2.plot(filename_list, r2_values, marker='o', color='darkorange', label='R²')
+ax2.set_ylim(-2, 1.2)
+ax2.tick_params(axis='y', labelcolor='darkorange')
+
+fig.legend(loc='upper right', bbox_to_anchor=(0.9, 0.9))
+fig.suptitle(f"Quench Validation: RSME and R² Data for Cryomodule {parts[2][:2]} Cavity {parts[2][2]}", fontsize=14)
+fig.tight_layout()
+# fig.savefig('validation_error_calculation.png', dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
