@@ -2,40 +2,41 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 
-# # this function prints the quench file number and prints the dataset names and attributes for each file
+# this function prints the quench file number and prints the dataset names and attributes for each file
 # with h5py.File("cavity_quench_data_google_drive.h5", "r") as file: 
-#     def print_h5_structure(name, object):
-#         print(name)
-#         if object.attrs:
-#             print("  Attributes:")
-#             for key, value in object.attrs.items():
-#                 print(f"    {key}: {value}")
-#     file.visititems(print_h5_structure)
+with h5py.File("test_data_CM31.h5", "r") as file:    
+    def print_h5_structure(name, object):
+        print(name)
+        if object.attrs:
+            print("  Attributes:")
+            for key, value in object.attrs.items():
+                print(f"    {key}: {value}")
+    file.visititems(print_h5_structure)
 
-with h5py.File('cavity_quench_data_google_drive_v2.h5', 'r') as f:
-    for group_name in f.keys():     # looping through all groups
-        group = f[group_name]       # this is the current file/group
+# with h5py.File('cavity_quench_data_google_drive_v2.h5', 'r') as f:
+#     for group_name in f.keys():     # looping through all groups
+#         group = f[group_name]       # this is the current file/group
         
-        time_data = group['time_seconds'][()]  # reads entire dataset into a numpy array
-        cavity_data = group['cavity_amplitude_MV'][()]
-        forward_data = group['forward_power_W2'][()]
-        reverse_data = group['reverse_power_W2'][()]
-        decay_data = group['decay_reference_MV'][()]
+#         time_data = group['time_seconds'][()]  # reads entire dataset into a numpy array
+#         cavity_data = group['cavity_amplitude_MV'][()]
+#         forward_data = group['forward_power_W2'][()]
+#         reverse_data = group['reverse_power_W2'][()]
+#         decay_data = group['decay_reference_MV'][()]
         
-        filename = group.attrs['filename'] # getting filename from group attribute
-        timestamp = group.attrs['timestamp']
+#         filename = group.attrs['filename'] # getting filename from group attribute
+#         timestamp = group.attrs['timestamp']
 
-        # plotting waveform data for each group/quench file
-        plt.figure(figsize=(14,6))
-        plt.plot(time_data, cavity_data, label='Cavity Data (MV)', linewidth=3)
-        plt.plot(time_data, forward_data, label='Forward Power (W^2)', linewidth=2)
-        plt.plot(time_data, reverse_data, label='Reverse Power (W^2)', linewidth=2)
-        plt.xlim(-0.02, 0.02)
-        plt.plot(time_data, decay_data, label='Decay Reference (MV)', linestyle='--', linewidth=1.5)
-        plt.xlabel('Time in Seconds')
-        plt.ylabel('Amplitude')
-        plt.title(f'Cavity Quench Waveform\n{filename}')
-        plt.legend()
-        plt.grid(True)
-        plt.tight_layout()
-        plt.show()
+#         # plotting waveform data for each group/quench file
+#         plt.figure(figsize=(14,6))
+#         plt.plot(time_data, cavity_data, label='Cavity Data (MV)', linewidth=3)
+#         plt.plot(time_data, forward_data, label='Forward Power (W^2)', linewidth=2)
+#         plt.plot(time_data, reverse_data, label='Reverse Power (W^2)', linewidth=2)
+#         plt.xlim(-0.02, 0.02)
+#         plt.plot(time_data, decay_data, label='Decay Reference (MV)', linestyle='--', linewidth=1.5)
+#         plt.xlabel('Time in Seconds')
+#         plt.ylabel('Amplitude')
+#         plt.title(f'Cavity Quench Waveform\n{filename}')
+#         plt.legend()
+#         plt.grid(True)
+#         plt.tight_layout()
+#         plt.show()
