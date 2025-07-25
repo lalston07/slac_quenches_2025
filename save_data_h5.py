@@ -17,7 +17,8 @@ LOADED_Q_CHANGE_FOR_QUENCH = 0.6    # fixed value to determine threshold
 
 # searching for all quench files in the cryomodule
 quenches = []
-base_directory = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data"
+base_directory = r"/Users/nneveu/Google Drive/My Drive/students/Summer_2025/Leila/" # CHANGE THIS TO THE DIRECTORY WHERE THE FILES ARE STORED
+#base_directory = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data"
 CM_matches = glob.glob(base_directory + rf'/ACCL_L*B_{CM_num}*/**/*QUENCH.txt', recursive=True)
 matched = [f for f in CM_matches if re.search(r"\d+_QUENCH.txt", f)]
 print(f"Matched files from CM{CM_num}:")
@@ -45,26 +46,7 @@ def extracting_data(path_name, faultname):
                 return values, target_timestamp
     return None, None
 
-def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_update: bool=False, logger=None):
-    if wait_for_update:
-        print(f"Waiting 0.1s to give {fault_data} waveforms a chance to update")
-        time.sleep(0.1)
-    
-    time_0 = 0
-    for time_0, timestamp in enumerate(time_data):
-        if timestamp >= 0:
-            break
-    
-    fault_data = fault_data[time_0:]
-    time_data = time_data[time_0:]
-
-    end_decay = len(fault_data) - 1
-    for end_decay, amp in enumerate(fault_data):
-        if amp < 0.002:
-            break
-
-    fault_data = fault_data[:end_decay]
-    time_data = time_data[:end_decay]
+def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
 
     pre_quench_amp = fault_data[0]
 
