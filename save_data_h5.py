@@ -12,24 +12,17 @@ import time
 # directory_path = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data/ACCL_L3B_3180"
 # directory_path = r"G:\.shortcut-targets-by-id\1kjgZjwGRIE-5anoMitTfYFQ6bScG9PbZ\Summer_2025\Leila\ACCL_L3B_3180"
 
-CM_num = 31  # CHANGES FOR EACH FILE/CRYOMODULE
+CM_num = 31                         # CHANGES FOR EACH FILE/CRYOMODULE
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6    # fixed value to determine threshold
 
-# search/glob for directory list (ACCL_LxB_xxxx)
-base_directory = r"G:\.shortcut-targets-by-id\1kjgZjwGRIE-5anoMitTfYFQ6bScG9PbZ\Summer_2025\Leila"
-cryo_matches = glob.glob(base_directory + rf'\ACCL_L*B_{CM_num}*')
-# directory_list = [path for path in cryo_matches if os.path.isdir(path) and re.search(rf"ACCL_L\dB_{CM_num}\d{{2}}", path)]
-directory_list = [path for path in cryo_matches if os.path.isdir(path) and re.search(rf"ACCL_L\dB_{CM_num}10", path)]   # doing one cavity at a time as sample
-print("Matched directories:")
-for folder in directory_list:
-    print(folder)
-
-# finding all *_QUENCH.txt files inside each folder
+# searching for all quench files in the cryomodule
 quenches = []
-for directory_path in directory_list:
-    results = glob.glob(directory_path + r'\**\*QUENCH.txt', recursive=True)
-    matched = [f for f in results if re.search(r"\d+_QUENCH\.txt", f)]
-    quenches.extend(matched)
+#base_directory = r"/Users/nneveu/Google Drive/My Drive/students/Summer_2025/Leila/" # CHANGE THIS TO THE DIRECTORY WHERE THE FILES ARE STORED
+base_directory = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data"
+CM_matches = glob.glob(base_directory + rf'/ACCL_L*B_{CM_num}*/**/*QUENCH.txt', recursive=True)
+matched = [f for f in CM_matches if re.search(r"\d+_QUENCH.txt", f)]
+print(f"Matched files from CM{CM_num}:")
+quenches.extend(matched)
 print(f"Found {len(quenches)} quench files from cryomodule.")
 
 # putting the files in order by timestamp
@@ -53,26 +46,7 @@ def extracting_data(path_name, faultname):
                 return values, target_timestamp
     return None, None
 
-def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_update: bool=False, logger=None):
-    if wait_for_update:
-        print(f"Waiting 0.1s to give {fault_data} waveforms a chance to update")
-        time.sleep(0.1)
-    
-    time_0 = 0
-    for time_0, timestamp in enumerate(time_data):
-        if timestamp >= 0:
-            break
-    
-    fault_data = fault_data[time_0:]
-    time_data = time_data[time_0:]
-
-    end_decay = len(fault_data) - 1
-    for end_decay, amp in enumerate(fault_data):
-        if amp < 0.002:
-            break
-
-    fault_data = fault_data[:end_decay]
-    time_data = time_data[:end_decay]
+def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
 
     pre_quench_amp = fault_data[0]
 
@@ -108,7 +82,7 @@ cavity_num = {
 
 # saving waveform and metadata to an HDF5 file
 # output_filename = f"quench_data_CM{CM_num}.h5"
-output_filename = f"test_data_CM{CM_num}.h5"
+output_filename = f"quench_data_CM{CM_num}.h5"
 
 # this block of code is for saving waveform data and metadata to an HDF45 File
 with h5py.File(output_filename, 'w') as h5file: 
@@ -118,6 +92,7 @@ with h5py.File(output_filename, 'w') as h5file:
         # getting PV and timestamp information from the file
         pv_base = parts[0] + ":" + parts[1] + ":" + parts[2]
         timestamp = timestamp_obj.strftime("%Y-%m-%d_%H:%M:%S.").replace('.','')
+        timestamp = timestamp.split('_', 1)[-1] # gives only the HOUR:MINUTE:SECOND
 
         # formatting date components
         year = str(timestamp_obj.year)
@@ -125,12 +100,12 @@ with h5py.File(output_filename, 'w') as h5file:
         day = f"{timestamp_obj.day:02d}"
 
         # GROUP HIERARCHY : CM# (HDF5 file) > CAV# > YEAR > MONTH > DAY > TIMESTAMP
-        cavity = cavity_num.get(parts[2])               # .get() looks up a four digit number in the dictionary and looks for a match; when match is found it returns 'CAV#'
+        cavity = cavity_num.get(parts[2])               
         cavity_group = h5file.require_group(cavity)     # '.require_group()' only creates a group if it doesn't already exist
-        increment_quench_count(cavity_group)
+        increment_quench_count(cavity_group)            # if the group already exists then this line returns a reference to the existing group
 
-        year_group = cavity_group.require_group(year)   # if the group already exists then this line returns a reference to the existing group
-        increment_quench_count(year_group)
+        year_group = cavity_group.require_group(year) 
+        increment_quench_count(year_group)              # incrementing the number of quenches at each level (cavity, year, month, etc)
 
         month_group = year_group.require_group(month)
         increment_quench_count(month_group)
@@ -181,3 +156,4 @@ with h5py.File(output_filename, 'w') as h5file:
         quench_group.attrs['cryomodule'] = parts[2][:2] 
 
 print(f"Data from {len(quench_files)} successfully saved to {output_filename}.")
+>>>>>>> 9a360a02251802273fb796d5a6424fea5e16fff6
