@@ -17,8 +17,8 @@ LOADED_Q_CHANGE_FOR_QUENCH = 0.6    # fixed value to determine threshold
 
 # searching for all quench files in the cryomodule
 quenches = []
-base_directory = r"/Users/nneveu/Google Drive/My Drive/students/Summer_2025/Leila/" # CHANGE THIS TO THE DIRECTORY WHERE THE FILES ARE STORED
-#base_directory = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data"
+#base_directory = r"/Users/nneveu/Google Drive/My Drive/students/Summer_2025/Leila/" # CHANGE THIS TO THE DIRECTORY WHERE THE FILES ARE STORED
+base_directory = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data"
 CM_matches = glob.glob(base_directory + rf'/ACCL_L*B_{CM_num}*/**/*QUENCH.txt', recursive=True)
 matched = [f for f in CM_matches if re.search(r"\d+_QUENCH.txt", f)]
 print(f"Matched files from CM{CM_num}:")
