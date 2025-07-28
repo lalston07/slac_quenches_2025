@@ -37,7 +37,7 @@ def extracting_data(path_name, faultname):
     return None, None   # added in case the PV line is not found
 
 # re-writing Lisa's function to validate the quenches (real vs fake)
-def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_update: bool=False, logger=None):
+def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     """
     Parsing the fault waveforms to calculate the loaded Q to try to determine
     if a quench was real.
@@ -54,28 +54,6 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency, wait_for_u
     :param wait_for_update: bool
     :return: bool representing whether quench was real
     """
-
-    if wait_for_update:
-        print(f"Waiting 0.1s to give {fault_data} waveforms a chance to update")
-        time.sleep(0.1)
-    
-    time_0 = 0
-    for time_0, timestamp in enumerate(time_data):
-        if timestamp >= 0:
-            break
-    
-    fault_data = fault_data[time_0:]
-    time_data = time_data[time_0:]
-
-    end_decay = len(fault_data) - 1
-
-    # to find where amplitude decays to "zero"
-    for end_decay, amp in enumerate(fault_data):
-        if amp < 0.002:
-            break
-
-    fault_data = fault_data[:end_decay]
-    time_data = time_data[:end_decay]
 
     pre_quench_amp = fault_data[0]
 

@@ -12,12 +12,11 @@ import time
 # directory_path = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data/ACCL_L3B_3180"
 # directory_path = r"G:\.shortcut-targets-by-id\1kjgZjwGRIE-5anoMitTfYFQ6bScG9PbZ\Summer_2025\Leila\ACCL_L3B_3180"
 
-CM_num = 31                         # CHANGES FOR EACH FILE/CRYOMODULE
+CM_num = 32                         # CHANGES FOR EACH FILE/CRYOMODULE
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6    # fixed value to determine threshold
 
 # searching for all quench files in the cryomodule
 quenches = []
-# base_directory = r"/Users/nneveu/Google Drive/My Drive/students/Summer_2025/Leila/" # CHANGE THIS TO THE DIRECTORY WHERE THE FILES ARE STORED
 base_directory = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data"
 CM_matches = glob.glob(base_directory + rf'/ACCL_L*B_{CM_num}*/**/*QUENCH.txt', recursive=True)
 matched = [f for f in CM_matches if re.search(r"\d+_QUENCH.txt", f)]
@@ -47,6 +46,24 @@ def extracting_data(path_name, faultname):
     return None, None
 
 def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
+    # starts the time closer to when the quench happens to make the fit more accurate
+    time_0 = 0
+    for time_0, timestamp in enumerate(time_data):
+        if timestamp >= 0:
+            break
+    
+    fault_data = fault_data[time_0:]
+    time_data = time_data[time_0:]
+
+    # ends the time closer to when the quench is over to eliminate when the amplitude=0
+    end_decay = len(fault_data) - 1
+    for end_decay, amp in enumerate(fault_data):
+        if amp < 0.002:
+            break
+    
+    fault_data = fault_data[:end_decay]
+    time_data = time_data[:end_decay]
+
     pre_quench_amp = fault_data[0]
 
     exponential_term = np.polyfit(time_data, np.log(pre_quench_amp / fault_data), 1)[0]
@@ -62,7 +79,7 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
 def increment_quench_count(group):
     # if 'quench_count' already exists then we increment it
     # if it doesn't exist yet then we set the value to one
-    if "quench_count" in group.attrs:
+    if "quench_count" in group.attrs:   
         group.attrs["quench_count"] += 1
     else:
         group.attrs["quench_count"] = 1
@@ -80,12 +97,12 @@ cavity_num = {
 }
 
 # saving waveform and metadata to an HDF5 file
-output_filename = f"quench_data_CM{CM_num}.h5"
+output_filename = f"quench_data_CM{CM_num}_v2.h5"
 
 # this block of code is for saving waveform data and metadata to an HDF45 File
 with h5py.File(output_filename, 'w') as h5file: 
     for i, (filename, parts, timestamp_raw, timestamp_obj, file) in enumerate(quench_files):
-        print("\nProcessing file: " + file)
+        # print("\nProcessing file: " + file)
         
         # getting PV and timestamp information from the file
         pv_base = parts[0] + ":" + parts[1] + ":" + parts[2]
@@ -129,9 +146,17 @@ with h5py.File(output_filename, 'w') as h5file:
         decay_data, decay_time = extracting_data(file, decay_ref)
         time_data, time_timestamp = extracting_data(file, time_range)
         q_data, q_time = extracting_data(file, q_value)
-        freq_data, freq_time = extracting_data(file, freq_value) 
 
-        saved_loaded_q, calculated_q, classification = validate_quench(cavity_data, time_data, saved_loaded_q=q_data[0], frequency=freq_data[0])
+        # in some files, freq_data[0] was a None value, so we use the fixed value of '1300000000.0 GHz' instead
+        # freq_data, freq_time = extracting_data(file, freq_value) 
+        # print(freq_data[0])
+
+        # using try-except statement to catch where fault_data[0] is 'None'
+        # idea: file may be corrupt or waveform may be weird
+        try:
+            saved_loaded_q, calculated_q, classification = validate_quench(cavity_data, time_data, saved_loaded_q=q_data[0], frequency=1300000000.0)
+        except IndexError as e:
+            print(f"Processing {filename} failed with {e}")
 
         # making them all the same length in case the length varies
         forward_data = forward_data[:len(cavity_data)]
@@ -153,4 +178,4 @@ with h5py.File(output_filename, 'w') as h5file:
         quench_group.attrs['cavity_number'] = parts[2][2]
         quench_group.attrs['cryomodule'] = parts[2][:2] 
 
-print(f"Data from {len(quench_files)} successfully saved to {output_filename}.")
+print(f"Data from {len(quench_files)} files successfully saved to {output_filename}.")
