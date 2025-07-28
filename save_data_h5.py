@@ -17,7 +17,7 @@ LOADED_Q_CHANGE_FOR_QUENCH = 0.6    # fixed value to determine threshold
 
 # searching for all quench files in the cryomodule
 quenches = []
-#base_directory = r"/Users/nneveu/Google Drive/My Drive/students/Summer_2025/Leila/" # CHANGE THIS TO THE DIRECTORY WHERE THE FILES ARE STORED
+# base_directory = r"/Users/nneveu/Google Drive/My Drive/students/Summer_2025/Leila/" # CHANGE THIS TO THE DIRECTORY WHERE THE FILES ARE STORED
 base_directory = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data"
 CM_matches = glob.glob(base_directory + rf'/ACCL_L*B_{CM_num}*/**/*QUENCH.txt', recursive=True)
 matched = [f for f in CM_matches if re.search(r"\d+_QUENCH.txt", f)]
@@ -47,7 +47,6 @@ def extracting_data(path_name, faultname):
     return None, None
 
 def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
-
     pre_quench_amp = fault_data[0]
 
     exponential_term = np.polyfit(time_data, np.log(pre_quench_amp / fault_data), 1)[0]
@@ -81,7 +80,6 @@ cavity_num = {
 }
 
 # saving waveform and metadata to an HDF5 file
-# output_filename = f"quench_data_CM{CM_num}.h5"
 output_filename = f"quench_data_CM{CM_num}.h5"
 
 # this block of code is for saving waveform data and metadata to an HDF45 File
@@ -156,4 +154,3 @@ with h5py.File(output_filename, 'w') as h5file:
         quench_group.attrs['cryomodule'] = parts[2][:2] 
 
 print(f"Data from {len(quench_files)} successfully saved to {output_filename}.")
->>>>>>> 9a360a02251802273fb796d5a6424fea5e16fff6
