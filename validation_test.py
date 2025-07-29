@@ -131,7 +131,6 @@ for file in quench_files:
     timestamp_raw = parts[3] + "_" + parts[4]               # ex: pt(3): 20221028, pt(4): 235218
     # line below formats the timestamp to match the file layout
     timestamp = datetime.strptime(timestamp_raw, "%Y%m%d_%H%M%S").strftime("%Y-%m-%d_%H:%M:%S.")
-    # SORT THE TIMESTAMP LIST BY YEAR-MONTH-DATE_HOUR:MINUTE:SECOND
     
     print("PV label: " + pv_base)
     print("Timestamp: " + timestamp + "\n")
