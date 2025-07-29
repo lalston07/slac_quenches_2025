@@ -68,73 +68,100 @@ Error Message:
 LOOK AT THIS FILE TO SEE IF NP.POLYFIT() METHOD WAS MESSED UP SINCE SOME VALUES OF cavity_data WERE ZERO
 ACCL_L3B_3280_20241002_151905_QUENCH.txt
 """
-filename = "quench_data_CM32_v2.h5"
-day_path = "CAV1/2022/07/21"        # 20220721
-timestamp_list = ["11:01:57", "11:08:55", "13:52:15", "18:52:42", "12:31:16", "20:05:15", "17:18:06", "18:24:29"]
-with h5py.File(filename, 'r') as f:
-    if day_path in f:
-        day_group = f[day_path]
-        print(f"\n\nFound day group: {day_path}")
-        for timestamp in day_group:
-            if timestamp in timestamp_list:
-                quench_group = day_group[timestamp]
-                print(f"\n\n    Timestamp: {timestamp}")
+# filename = "quench_data_CM32_v2.h5"
+# day_path = "CAV1/2022/07/21"        # 20220721
+# timestamp_list = ["11:01:57", "11:08:55", "13:52:15", "18:52:42", "12:31:16", "20:05:15", "17:18:06", "18:24:29"]
+# with h5py.File(filename, 'r') as f:
+#     if day_path in f:
+#         day_group = f[day_path]
+#         print(f"\n\nFound day group: {day_path}")
+#         for timestamp in day_group:
+#             if timestamp in timestamp_list:
+#                 quench_group = day_group[timestamp]
+#                 print(f"\n\n    Timestamp: {timestamp}")
 
-                # reading waveform data
-                time_data = quench_group['time_seconds'][:]
-                cavity_data = quench_group['cavity_amplitude_MV'][:]
-                forward_power = quench_group['forward_power_W2'][:]
-                reverse_power = quench_group['reverse_power_W2'][:]
-                decay_ref = quench_group['decay_reference_MV'][:]
+#                 # reading waveform data
+#                 time_data = quench_group['time_seconds'][:]
+#                 cavity_data = quench_group['cavity_amplitude_MV'][:]
+#                 forward_power = quench_group['forward_power_W2'][:]
+#                 reverse_power = quench_group['reverse_power_W2'][:]
+#                 decay_ref = quench_group['decay_reference_MV'][:]
 
-                np.set_printoptions(threshold=np.inf)
-                print("Cavity Data:\n", cavity_data)
-                print("Decay Reference:\n", decay_ref)
+#                 np.set_printoptions(threshold=np.inf)
+#                 print("Cavity Data:\n", cavity_data)
+#                 print("Decay Reference:\n", decay_ref)
 
-                # for i, data_point in enumerate(cavity_data):
-                #     if np.isclose(data_point, 0, atol=1e-5):  # adjust tolerance if needed
-                #         print(f"⚠️ Near-zero cavity amplitude at index {i}, value: {data_point}")
+#                 # for i, data_point in enumerate(cavity_data):
+#                 #     if np.isclose(data_point, 0, atol=1e-5):  # adjust tolerance if needed
+#                 #         print(f"⚠️ Near-zero cavity amplitude at index {i}, value: {data_point}")
 
-                # metadata = {data: quench_group.attrs[data] for data in quench_group.attrs}
-                for metadata_key, metadata_value in quench_group.attrs.items():
-                    print(f"{metadata_key}: {metadata_value}")
-                """
-                    Metadata: {'calculated_q_value': nan, 'cavity_number': '8', 'cryomodule': '32', 'faultname': 'ACCL:L3B:3280:CAV:FLTAWF', 
-                    'filename': 'ACCL_L3B_3280_20241002_151905_QUENCH.txt', 'quench_classification': False, 'saved_q_value': 41681390.47526922, 
-                    'timestamp': '2024-10-02_15:19:05.864747'}
+#                 # metadata = {data: quench_group.attrs[data] for data in quench_group.attrs}
+#                 for metadata_key, metadata_value in quench_group.attrs.items():
+#                     print(f"{metadata_key}: {metadata_value}")
+#                 """
+#                     Metadata: {'calculated_q_value': nan, 'cavity_number': '8', 'cryomodule': '32', 'faultname': 'ACCL:L3B:3280:CAV:FLTAWF', 
+#                     'filename': 'ACCL_L3B_3280_20241002_151905_QUENCH.txt', 'quench_classification': False, 'saved_q_value': 41681390.47526922, 
+#                     'timestamp': '2024-10-02_15:19:05.864747'}
 
-                    Calculated Q-value is 'nan' because we divided by zero from the cavity_data in the np.polyfit() validation method
-                    This quench was classified as fake but how? Looking at the waveform plot, it was a fake quench.
-                        >> is_real = loaded_q < thresh_for_quench
-                        >> is_real = NaN < thresh_for_quench always returns boolean False
-                    How can we confirm that this quench was fake if the loaded_q value could not be calculated?
-                """
+#                     Calculated Q-value is 'nan' because we divided by zero from the cavity_data in the np.polyfit() validation method
+#                     This quench was classified as fake but how? Looking at the waveform plot, it was a fake quench.
+#                         >> is_real = loaded_q < thresh_for_quench
+#                         >> is_real = NaN < thresh_for_quench always returns boolean False
+#                     How can we confirm that this quench was fake if the loaded_q value could not be calculated?
+#                 """
             
-                saved_loaded_q = quench_group.attrs['saved_q_value']
+#                 saved_loaded_q = quench_group.attrs['saved_q_value']
                 
-                try:
-                    classification, rmse, r2, time_0, end_decay = validate_quench(cavity_data, time_data, saved_loaded_q= saved_loaded_q, frequency=1300000000.0)
-                    print(f"Time Zero: {time_0}, End Decay: {end_decay}")
-                    print(f"RMSE Value is {rmse}, and R^2 Score is {r2}")
-                except IndexError as e:
-                    print(f"Processing {filename} failed with {e}")
+#                 try:
+#                     classification, rmse, r2, time_0, end_decay = validate_quench(cavity_data, time_data, saved_loaded_q= saved_loaded_q, frequency=1300000000.0)
+#                     print(f"Time Zero: {time_0}, End Decay: {end_decay}")
+#                     print(f"RMSE Value is {rmse}, and R^2 Score is {r2}")
+#                 except IndexError as e:
+#                     print(f"Processing {filename} failed with {e}")
 
-                # plotting waveform data for each group/quench file
-                plt.figure(figsize=(14,6))
-                plt.plot(time_data, cavity_data, label='Cavity Data (MV)', linewidth=3)
-                plt.plot(time_data, forward_power, label='Forward Power (W^2)', linewidth=2)
-                plt.plot(time_data, reverse_power, label='Reverse Power (W^2)', linewidth=2)
-                plt.xlim(-0.02, 0.02)
-                plt.plot(time_data, decay_ref, label='Decay Reference (MV)', linestyle='--', linewidth=1.5)
-                plt.xlabel('Time in Seconds')
-                plt.ylabel('Amplitude')
-                plt.title(f'Cavity Quench Waveform\n{filename}')
-                plt.legend()
-                plt.grid(True)
-                plt.tight_layout()
-                plt.show()
+#                 # plotting waveform data for each group/quench file
+#                 plt.figure(figsize=(14,6))
+#                 plt.plot(time_data, cavity_data, label='Cavity Data (MV)', linewidth=3)
+#                 plt.plot(time_data, forward_power, label='Forward Power (W^2)', linewidth=2)
+#                 plt.plot(time_data, reverse_power, label='Reverse Power (W^2)', linewidth=2)
+#                 plt.xlim(-0.02, 0.02)
+#                 plt.plot(time_data, decay_ref, label='Decay Reference (MV)', linestyle='--', linewidth=1.5)
+#                 plt.xlabel('Time in Seconds')
+#                 plt.ylabel('Amplitude')
+#                 plt.title(f'Cavity Quench Waveform\n{filename}')
+#                 plt.legend()
+#                 plt.grid(True)
+#                 plt.tight_layout()
+#                 plt.show()
 
 
+import os
+import h5py
+import matplotlib.pyplot as plt
+folder_path = "C:\Users\leila\Documents\Visual Studio\slac_quenches_2025\quench_data_per_cryomodule"
+quench_counts = {}
+h5_files = [f for f in os.listdir(folder_path) if f.endswith('.h5')]
+
+for file in h5_files:
+    file_path = os.path.join(folder_path, file)
+    count = 0
+
+    with h5py.File(file_path, 'r') as f:
+        for cavity_num in f.keys():
+            cav_group = f[cavity_num]
+            count += cav_group.attrs['quench_count']
+
+    quench_counts[file] = count
+
+plt.figure(figsize=(12,6))
+plt.bar(quench_counts.keys(), quench_counts.values(), color='skyblue')
+plt.xlabel('Cryomodule Number')
+plt.ylabel('Total Number of Quenches')
+plt.title('Number of Quenches per Cryomodule (2022-2025)')
+plt.xticks(rotation=90)
+plt.tight_layout()
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.show()
 
 
 # # extracting data and calculating RMSE values for each quench in a cryomodule
