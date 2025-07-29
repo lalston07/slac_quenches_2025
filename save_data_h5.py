@@ -12,7 +12,7 @@ import time
 # directory_path = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data/ACCL_L3B_3180"
 # directory_path = r"G:\.shortcut-targets-by-id\1kjgZjwGRIE-5anoMitTfYFQ6bScG9PbZ\Summer_2025\Leila\ACCL_L3B_3180"
 
-CM_num = 32                         # CHANGES FOR EACH FILE/CRYOMODULE
+CM_num = "35"                         # CHANGES FOR EACH FILE/CRYOMODULE
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6    # fixed value to determine threshold
 
 # searching for all quench files in the cryomodule
@@ -32,7 +32,7 @@ for file in quenches:
     timestamp_raw = parts[3] + "_" + parts[4]
     timestamp_obj = datetime.strptime(timestamp_raw, "%Y%m%d_%H%M%S")
     quench_files.append((filename, parts, timestamp_raw, timestamp_obj, file))
-quench_files.sort(key=lambda x: x[0])
+quench_files.sort(key=lambda x: x[0])   # putting timestamps in order by timestamp
 
 # creating a function to extract the waveform data and timestamps from each file
 def extracting_data(path_name, faultname): 
@@ -97,7 +97,7 @@ cavity_num = {
 }
 
 # saving waveform and metadata to an HDF5 file
-output_filename = f"quench_data_CM{CM_num}_v2.h5"
+output_filename = f"quench_data_CM{CM_num}.h5"
 
 # this block of code is for saving waveform data and metadata to an HDF45 File
 with h5py.File(output_filename, 'w') as h5file: 
@@ -155,6 +155,9 @@ with h5py.File(output_filename, 'w') as h5file:
         # idea: file may be corrupt or waveform may be weird
         try:
             saved_loaded_q, calculated_q, classification = validate_quench(cavity_data, time_data, saved_loaded_q=q_data[0], frequency=1300000000.0)
+            quench_group.attrs['quench_classification'] = classification
+            quench_group.attrs['saved_q_value'] = saved_loaded_q
+            quench_group.attrs['calculated_q_value'] = calculated_q
         except IndexError as e:
             print(f"Processing {filename} failed with {e}")
 
@@ -166,15 +169,16 @@ with h5py.File(output_filename, 'w') as h5file:
         quench_group.create_dataset('cavity_amplitude_MV', data=cavity_data)
         quench_group.create_dataset('forward_power_W2', data=forward_data)
         quench_group.create_dataset('reverse_power_W2', data=reverse_data)
-        quench_group.create_dataset('decay_reference_MV', data=decay_data)
+        
+        if decay_data is not None:
+            quench_group.create_dataset('decay_reference_MV', data=decay_data)
+        else:
+            print(f"Warning: decay_data is None for {filename}")
 
         # saving metadata for each quench as attributes
         quench_group.attrs['filename'] = f"{filename}"
         quench_group.attrs['timestamp'] = cavity_time
         quench_group.attrs['faultname'] = cavity_faultname
-        quench_group.attrs['quench_classification'] = classification
-        quench_group.attrs['saved_q_value'] = saved_loaded_q
-        quench_group.attrs['calculated_q_value'] = calculated_q
         quench_group.attrs['cavity_number'] = parts[2][2]
         quench_group.attrs['cryomodule'] = parts[2][:2] 
 
