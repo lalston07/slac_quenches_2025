@@ -10,7 +10,7 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     for time_0, timestamp in enumerate(time_data):
         if timestamp >= 0:
             break
-    
+     
     fault_data = fault_data[time_0:]
     time_data = time_data[time_0:]
 

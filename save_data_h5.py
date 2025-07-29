@@ -6,13 +6,13 @@ import pandas as pd
 import h5py
 import os
 import time
-
+ 
 # extracting data using a single directory:
 # directory_path = r"G:\My Drive\ACCL_L3B_3180"
 # directory_path = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data/ACCL_L3B_3180"
 # directory_path = r"G:\.shortcut-targets-by-id\1kjgZjwGRIE-5anoMitTfYFQ6bScG9PbZ\Summer_2025\Leila\ACCL_L3B_3180"
 
-CM_num = "35"                         # CHANGES FOR EACH FILE/CRYOMODULE
+CM_num = "33"                       # CHANGES FOR EACH FILE/CRYOMODULE
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6    # fixed value to determine threshold
 
 # searching for all quench files in the cryomodule
