@@ -58,6 +58,9 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
 
     return is_real, rmse, r2, time_0, end_decay
 
+
+
+
 """
 THIS WAS BEFORE PUTTING BACK THE CODE FROM LISA'S VALIDATION METHOD
 
@@ -135,109 +138,158 @@ ACCL_L3B_3280_20241002_151905_QUENCH.txt
 #                 plt.show()
 
 
+
+"""
+This section of code plots the number of quenches per cryomodule (real or fake)
+
+Questions answered with this plot:
+(1) Which cryomodule quenched the most?
+(2) Which cryomodule quenched the least?
+"""
 import os
 import h5py
 import matplotlib.pyplot as plt
-folder_path = "C:\Users\leila\Documents\Visual Studio\slac_quenches_2025\quench_data_per_cryomodule"
-quench_counts = {}
+
+folder_path = "C:/Users/leila/Documents/Visual Studio/slac_quenches_2025/quench_data_per_cryomodule"
 h5_files = [f for f in os.listdir(folder_path) if f.endswith('.h5')]
+
+quench_counts_per_cryo = {} # initializing dictionary 
+cryo_names = []             # initializing list
 
 for file in h5_files:
     file_path = os.path.join(folder_path, file)
-    count = 0
+    cryo_label = file.replace("quench_data_", "").replace(".h5", "")
+    cryo_names.append(cryo_label)   # cryo_label is the key
+
+    if cryo_label not in quench_counts_per_cryo:
+        quench_counts_per_cryo[cryo_label] = 0
 
     with h5py.File(file_path, 'r') as f:
         for cavity_num in f.keys():
             cav_group = f[cavity_num]
-            count += cav_group.attrs['quench_count']
+            quench_counts_per_cryo[cryo_label] += cav_group.attrs.get('quench_count', 0)
 
-    quench_counts[file] = count
+for cryomodule, count in quench_counts_per_cryo.items():   
+    print(f"{cryomodule}: {count} total quenches")
 
+# plot for quenches per cryomodule
 plt.figure(figsize=(12,6))
-plt.bar(quench_counts.keys(), quench_counts.values(), color='skyblue')
-plt.xlabel('Cryomodule Number')
-plt.ylabel('Total Number of Quenches')
-plt.title('Number of Quenches per Cryomodule (2022-2025)')
+plt.bar(cryo_names, quench_counts_per_cryo.values(), color='skyblue')
+plt.xlabel('Cryomodule Number', fontsize=14)
+plt.ylabel('Total Number of Quenches', fontsize=14)
+plt.title('Number of Quenches Per Cryomodule (2022–2025)', fontsize=14)
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.grid(True, linestyle='--', alpha=0.5)
 plt.show()
 
 
-# # extracting data and calculating RMSE values for each quench in a cryomodule
-# filename = "quench_data_CM30.h5"
-# with h5py.File(filename, 'r') as f:
 
 
+"""
+This section of code plots the number of real and fake quenches per cryomodule 
 
-# # extracting data from the H5 file
-# filename = "test_data_CM31.h5"
-# month_path = "CAV1/2025/07"
+Questions answered with this plot:
+(1) How many real quenches per cryomodule?
+(2) How many fake quenches per cryomodule?
+"""
+real_quenches_per_cryo = {}
+fake_quenches_per_cryo = {}
+invalid_quenches_per_cryo = {}
 
-# with h5py.File(filename, 'r') as f:
-#     if month_path in f:
-#         month_group = f[month_path]
-#         print(f"Found month group: {month_path}")
-#         days = list(month_group.keys())
-#         print(f"Days in {month_path}: {days}")
-#         for day in days:
-#             day_group = month_group[day]
-#             for timestamp in day_group: 
-#                 quench_group = day_group[timestamp]
-#                 print(f"    Timestamp: {timestamp}")
+for file in h5_files:
+    file_path = os.path.join(folder_path, file)
+    cryo_label = file.replace("quench_data_", "").replace(".h5", "")
 
-#                 # reading waveform data
-#                 time_data = quench_group['time_seconds'][:]
-#                 cavity_data = quench_group['cavity_amplitude_MV'][:]
-#                 forward_power = quench_group['forward_power_W2'][:]
-#                 reverse_power = quench_group['reverse_power_W2'][:]
-#                 decay_ref = quench_group['decay_reference_MV'][:]
-                
-#                 # retrieving the metadata
-#                 metadata = {data: quench_group.attrs[data] for data in quench_group.attrs}
-                
-#                 # printing the information
-#                 print(f"    Time Data: {time_data}")
-#                 print(f"    Cavity Data: {cavity_data}")
-#                 print(f"    Forward Power Data: {forward_power}")
-#                 print(f"    Reverse Power Data: {reverse_power}")
-#                 print(f"    Decay Reference Data: {decay_ref}")
-#                 print(f"    Metadata: {metadata}")
+    # intializing counts for real and fake classifications
+    real_quenches_per_cryo[cryo_label] = 0
+    fake_quenches_per_cryo[cryo_label] = 0
+    invalid_quenches_per_cryo[cryo_label] = 0
 
-#                 # plotting the waveform data
-#                 fig, ax = plt.plot(figsize=(12,6))
-#                 ax.set_title(f"Plot of Quench Wavform Data - {month_group}_{day_group}_{timestamp}")
-#                 ax.set_xlabel("Time in Seconds")
-#                 ax.set_ylabel("Amplitude")
-#                 ax.plot(time_data, cavity_data, label='Cavity (MV)', color='blue')
-#                 ax.plot(time_data, forward_power, label='Forward Power (W2)')
-#     else: 
-#         print(f"Path '{month_path}' not found.")
+    with h5py.File(file_path, 'r') as f:
+        for cavity_num in f.keys():
+            cavity_group = f[cavity_num]
 
-# with h5py.File('cavity_quench_data_google_drive_v2.h5', 'r') as f:
-#     for group_name in f.keys():     # looping through all groups
-#         group = f[group_name]       # this is the current file/group
-        
-#         time_data = group['time_seconds'][()]  # reads entire dataset into a numpy array
-#         cavity_data = group['cavity_amplitude_MV'][()]
-#         forward_data = group['forward_power_W2'][()]
-#         reverse_data = group['reverse_power_W2'][()]
-#         decay_data = group['decay_reference_MV'][()]
-        
-#         filename = group.attrs['filename'] # getting filename from group attribute
-#         timestamp = group.attrs['timestamp']
+            for year in cavity_group.keys():
+                year_group = cavity_group[year]
+                for month in year_group.keys():
+                    month_group = year_group[month]
+                    for day in month_group.keys():
+                        day_group = month_group[day]
 
-#         # plotting waveform data for each group/quench file
-#         plt.figure(figsize=(14,6))
-#         plt.plot(time_data, cavity_data, label='Cavity Data (MV)', linewidth=3)
-#         plt.plot(time_data, forward_data, label='Forward Power (W^2)', linewidth=2)
-#         plt.plot(time_data, reverse_data, label='Reverse Power (W^2)', linewidth=2)
-#         plt.xlim(-0.02, 0.02)
-#         plt.plot(time_data, decay_data, label='Decay Reference (MV)', linestyle='--', linewidth=1.5)
-#         plt.xlabel('Time in Seconds')
-#         plt.ylabel('Amplitude')
-#         plt.title(f'Cavity Quench Waveform\n{filename}')
-#         plt.legend()
-#         plt.grid(True)
-#         plt.tight_layout()
-#         plt.show()
+                        for quench_timestamp in day_group.keys():
+                            quench_group = day_group[quench_timestamp]
+                            
+                            classification = quench_group.attrs.get("quench_classification", None)
+                            if classification is None:
+                                continue
+
+                            if classification == True:
+                                real_quenches_per_cryo[cryo_label] += 1
+                            elif classification == False:
+                                fake_quenches_per_cryo[cryo_label] += 1
+
+print("Real Quenches Per Cryomodule (Classified by Validation Method):\n")
+for cryomodule, count in real_quenches_per_cryo.items():   
+    print(f"{cryomodule}: {count} real quenches")
+
+print("Fake Quenches Per Cryomodule (Classified by Validation Method):\n")
+for cryomodule, count in fake_quenches_per_cryo.items():   
+    print(f"{cryomodule}: {count} fake quenches")
+
+all_cryomodules = list(real_quenches_per_cryo.keys())
+real_counts = [real_quenches_per_cryo[cm] for cm in all_cryomodules]
+fake_counts = [fake_quenches_per_cryo[cm] for cm in all_cryomodules]
+
+x = np.arange(len(all_cryomodules))
+width = 0.4
+
+# plotting both real and fake quench data
+fig, ax = plt.subplots(figsize=(15, 7))
+real_bars = ax.bar(x - width/2, real_counts, width, label='Real Quenches', color='green')
+fake_bars = ax.bar(x + width/2, fake_counts, width, label='Fake Quenches', color='red')
+ax.set_xlabel('Cryomodule', fontsize=14)
+ax.set_ylabel('Number of Quenches', fontsize=14)
+ax.set_title('Real vs Fake Quenches per Cryomodule (2022-2025)', fontsize=14)
+ax.set_xticks(x)
+ax.set_xticklabels(all_cryomodules, rotation=90)
+ax.legend()
+ax.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+# plotting only real quench data
+fig2, ax2 = plt.subplots(figsize=(15, 7))
+real_bars = ax2.bar(x, real_counts, label='Real Quenches', color='green')
+ax2.set_xlabel('Cryomodule', fontsize=14)
+ax2.set_ylabel('Number of Quenches', fontsize=14)
+ax2.set_title('Real vs Fake Quenches per Cryomodule (2022-2025)', fontsize=14)
+ax2.set_xticks(x)
+ax2.set_xticklabels(all_cryomodules, rotation=90)
+ax2.legend()
+ax2.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+# plotting only fake quench data
+fig3, ax3 = plt.subplots(figsize=(15, 7))
+fake_bars = ax3.bar(x, fake_counts, label='Fake Quenches', color='red')
+ax3.set_xlabel('Cryomodule', fontsize=14)
+ax3.set_ylabel('Number of Quenches', fontsize=14)
+ax3.set_title('Real vs Fake Quenches per Cryomodule (2022-2025)', fontsize=14)
+ax3.set_xticks(x)
+ax3.set_xticklabels(all_cryomodules, rotation=90)
+ax3.legend()
+ax3.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+# pie chart of real vs fake classified quenches in the whole machine
+labels = ['Real Quenches', 'Fake Quenches']
+sizes = [sum(real_counts), sum(fake_counts)]
+colors = ['green', 'red']
+fig4, ax4 = plt.subplots()
+ax4.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+ax4.set_title('Overall Quench Classification CM01-CM35 (2022-2025)')
+ax4.axis('equal')   # equal aspect ratio makes the pie chart a circle
+plt.show()
