@@ -7,7 +7,7 @@ import re
 import time
 from datetime import datetime
 import pandas as pd
-
+ 
 # to extract data using a directory:
 directory_path = r"G:\My Drive\ACCL_L3B_3180"
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6
@@ -115,7 +115,7 @@ real_quenches = []
 results = []
 count_false = 0
 count_true = 0
-rsme_values = []
+rmse_values = []
 r2_values = []
 filename_list = []
 
@@ -156,7 +156,7 @@ for file in quench_files:
     # running validation
     # frequency is fixed value (1.3 GHz) and saved_loaded_q varies for each file
     classification, rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_data[0], frequency=freq_data[0])
-    rsme_values.append(rmse)
+    rmse_values.append(rmse)
     r2_values.append(r2)
     
     # results.append({"filename": f"{filename}.txt", "timestamp": cavity_time, "real_quench": is_real})
@@ -198,7 +198,7 @@ print(f"Real Quench Files: {real_quenches}")
 fig, ax1 = plt.subplots(figsize=(14,6))
 ax1.set_xlabel('Quench Timestamp and Classification', fontsize=14)
 ax1.set_ylabel('RMSE Value', color='blue', fontsize=14)
-ax1.plot(filename_list, rsme_values, marker='o', color='blue', label='RMSE Values')
+ax1.plot(filename_list, rmse_values, marker='o', color='blue', label='RMSE Values')
 ax1.tick_params(axis='y', labelcolor='blue')
 plt.xticks(rotation=90)
 ax1.grid(True, linestyle='--')
