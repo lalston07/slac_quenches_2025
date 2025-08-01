@@ -49,23 +49,22 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
 
 
 """
-Questions answered with this plot:
-(1) Which cryomodule quenched the most?
-(2) Which cryomodule quenched the least?
-(3) How many real quenches per cryomodule?
-(4) How many fake quenches per cryomodule?
-(5) How many quenches per year?
-(6) Which cavity quenched the most?
-(7) Which cavity quenched the least?
+Questions answered with these plot:
+    (1) Which cryomodule quenched the most?
+    (2) How many real quenches per cryomodule?
+    (3) How many fake quenches per cryomodule?
+    (4) How many quenches per year?
+    (5) Which cavity quenched the most?
 """
 
 folder_path = "C:/Users/leila/Documents/Visual Studio/slac_quenches_2025/quench_data_per_cryomodule"
 h5_files = [f for f in os.listdir(folder_path) if f.endswith('.h5')]
 
-quench_counts_per_cryo = {}     # initializing dictionary 
-cryo_names = []                 # initializing list
-real_quenches_per_cryo = {}     # counts per cryomodule for classified real
-fake_quenches_per_cryo = {}     # counts per cryomodule for classified fake
+# initializing dictionaries and lists
+quench_counts_per_cryo = {}  
+cryo_names = []            
+real_quenches_per_cryo = {}   
+fake_quenches_per_cryo = {}
 quenches_per_cavity = {}
 quenches_per_year = {}
 quenches_per_month = {}
@@ -74,12 +73,13 @@ quenches_per_day = {}
 for file in h5_files:
     file_path = os.path.join(folder_path, file)
     cryo_label = file.replace("quench_data_", "").replace(".h5", "")
-    cryo_names.append(cryo_label)   # cryo_label is the key
+    cryo_names.append(cryo_label)
 
     # intializing counts for each cryomodule
     quench_counts_per_cryo[cryo_label] = 0
     real_quenches_per_cryo[cryo_label] = 0
     fake_quenches_per_cryo[cryo_label] = 0
+
     quenches_per_cavity[cryo_label] = {}
     quenches_per_year[cryo_label] = {}
     quenches_per_month[cryo_label] = {}
@@ -97,9 +97,9 @@ for file in h5_files:
                 year_group = cavity_group[year]
                 year_count = year_group.attrs.get("quench_count", 0)
                 
+                # getting quenches per year for each file/cryomodule
                 if year not in quenches_per_year[cryo_label]:
                     quenches_per_year[cryo_label][year] = 0
-                
                 quenches_per_year[cryo_label][year] += year_count
 
                 for month in year_group.keys():
