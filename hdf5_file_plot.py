@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 import re
+import os
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6
 
 def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
@@ -56,9 +57,6 @@ Questions answered with this plot:
 (1) Which cryomodule quenched the most?
 (2) Which cryomodule quenched the least?
 """
-import os
-import h5py
-import matplotlib.pyplot as plt
 
 folder_path = "C:/Users/leila/Documents/Visual Studio/slac_quenches_2025/quench_data_per_cryomodule"
 h5_files = [f for f in os.listdir(folder_path) if f.endswith('.h5')]
@@ -102,12 +100,15 @@ plt.show()
 """
 This section of code plots the number of real and fake quenches per cryomodule 
 
-Questions answered with this plot:
+Questions answered with these plots:
 (1) How many real quenches per cryomodule?
 (2) How many fake quenches per cryomodule?
+(3) How many quenches per year?
 """
-real_quenches_per_cryo = {}
-fake_quenches_per_cryo = {}
+real_quenches_per_cryo = {}     # counts per cryomodule for classified real
+fake_quenches_per_cryo = {}     # counts per cryomodule for classified fake
+quenches_per_year = {}          # counts per cryomodule by year
+quenches_per_cavity = {}
 
 for file in h5_files:
     file_path = os.path.join(folder_path, file)
@@ -116,24 +117,38 @@ for file in h5_files:
     # intializing counts for real and fake classifications
     real_quenches_per_cryo[cryo_label] = 0
     fake_quenches_per_cryo[cryo_label] = 0
+    quenches_per_year[cryo_label] = {}
+    quenches_per_cavity[cryo_label] = {}
 
     with h5py.File(file_path, 'r') as f:
         for cavity_num in f.keys():
             cavity_group = f[cavity_num]
+            count = 0
+
+            if cavity_num not in quenches_per_cavity[cryo_label]:
+                quenches_per_cavity[cryo_label][cavity_num] = 0
 
             for year in cavity_group.keys():
                 year_group = cavity_group[year]
+
+                if year not in quenches_per_year[cryo_label]:
+                    quenches_per_year[cryo_label][year] = 0
+
                 for month in year_group.keys():
                     month_group = year_group[month]
+                    
                     for day in month_group.keys():
                         day_group = month_group[day]
 
                         for quench_timestamp in day_group.keys():
                             quench_group = day_group[quench_timestamp]
-                            
                             classification = quench_group.attrs.get("quench_classification", None)
+                            
                             if classification is None:
                                 continue
+                            
+                            quenches_per_year[cryo_label][year] += 1
+                            quenches_per_cavity[cryo_label][cavity_num] += 1
 
                             if classification == True:
                                 real_quenches_per_cryo[cryo_label] += 1
@@ -156,18 +171,17 @@ x = np.arange(len(all_cryomodules))
 width = 0.4
 
 # plotting both real and fake quench data on scatter plot
-fig, ax = plt.subplots(figsize=(15, 9))
-real_bars = ax.bar(x, real_counts, bottom=fake_counts, label='Real Quenches', color='green')
-fake_bars = ax.bar(x, fake_counts, label='Fake Quenches', color='red')
+fig, ax = plt.subplots(figsize=(15, 10))
+real_bars = ax.bar(x, real_counts, label='Real Quenches', color='green')
+fake_bars = ax.bar(x, fake_counts, bottom=real_counts, label='Fake Quenches', color='red')
 ax.set_xlabel('Cryomodule', fontsize=14)
 ax.set_ylabel('Number of Quenches', fontsize=14)
-ax.set_ylim(0, 5100)
 ax.set_title('Real vs Fake Quenches per Cryomodule (2022-2025)', fontsize=14)
 ax.set_xticks(x)
 ax.set_xticklabels(all_cryomodules, rotation=90)
 ax.legend()
 ax.grid(True, linestyle='--', alpha=0.5)
-plt.tight_layout()
+# plt.tight_layout()
 plt.show()
 
 # plotting only real quench data
@@ -212,88 +226,36 @@ ax4.set_title('Overall Quench Classification CM01-CM35 (2022-2025)')
 ax4.axis('equal')   # equal aspect ratio makes the pie chart a circle
 plt.show()
 
-
-
-
-
-"""
-This section of code calculates the RMSE values for each "real" quench to access accuracy of the classification.
-The goal is to determine a threshold RMSE value above which the classification of a quench as "real" can be considered reliable.
-
-Questions answered with this plot:
-(1) How many quenches were falsely classified?
-(2) Above what RMSE value are we certain that the quenches are real?
-"""
-# initializing dictionary for RMSE values per cryomodule
-rmse_per_cryomodule = {}
-sample_files = ["02", "03", "05", "05", "06", "10", "11", "14", "17"
-                "18", "19", "21", "23", "28", "30"]
-filtered_h5_files = [f for f in h5_files if any(cm in f for cm in sample_files)]
-
-for file in filtered_h5_files:
-    file_path = os.path.join(folder_path, file)
-    rmse_values = []
-    quench_names = []
-
-    with h5py.File(file_path, 'r') as f:
-
-        for cavity_num in f.keys():
-            cavity_group = f[cavity_num]
-
-            for year in cavity_group.keys():
-                year_group = cavity_group[year]
-                
-                for month in year_group.keys():
-                    month_group = year_group[month]
-                    
-                    for day in month_group.keys():
-                        day_group = month_group[day]
-
-                        for quench_timestamp in day_group.keys():
-                            quench_group = day_group[quench_timestamp]
-
-                            classification = quench_group.attrs.get("quench_classification", None)
-                            
-                            if classification == True:
-                                time_data = quench_group['time_seconds'][:]
-                                cavity_data = quench_group['cavity_amplitude_MV'][:]
-                                q_value = quench_group.attrs.get("saved_q_value")
-                                
-                                try:
-                                    rmse = validate_quench(cavity_data, time_data, saved_loaded_q=q_value, frequency=1300000000.0)
-                                    rmse_values.append(rmse)
-                                    full_timestamp = f"{cavity_num}-{year}-{month}-{day}-{quench_timestamp}"
-                                    quench_names.append(full_timestamp)
-                                except Exception as e:
-                                    print(f"Error in file {file_path}, timestamp {quench_timestamp}: {e}")
-    
-    # storing rmse data per file/cryomodule in dictionary
-    rmse_per_cryomodule[file_path] = {
-        'rmse': rmse_values,
-        'quench': quench_names
-    }
-
-for file_path, data in rmse_per_cryomodule.items():
-    if not data['rmse']:
-        continue
-
-    figure, axis = plt.subplots(figsize=(14, 6))
-    bars = axis.bar(data['quench'], data['rmse'], color='darkorange')
-    for bar in bars:
+# plotting number of quenches per year for each cryomodule
+all_years = sorted({year for cryo in quenches_per_year for year in quenches_per_year[cryo]})
+for year in all_years:
+    cryo_modules = sorted(quenches_per_year.keys())
+    counts = [quenches_per_year[cryo].get(year, 0) for cryo in cryo_modules]
+    fig5, ax5 = plt.subplots(figsize=(14,6))
+    count_bars = ax5.bar(cryo_modules, counts, color='blue')
+    for bar in count_bars:
         height = bar.get_height()
-        axis.text(
-            bar.get_x() + bar.get_width() / 2,
-            height + 0.01,  # Adjust offset as needed
-            f"{height:.3f}",  # You can round the RMSE value
-            ha='center',
-            va='bottom',
-            fontsize=8
-        )
-    axis.set_title(f'RMSE per Real Quench in "{os.path.basename(file_path)}"')
-    axis.set_xlabel('Quench Timestamp')
-    axis.set_ylabel('RMSE Value')
-    axis.set_xticks(range(len(data['quench'])))
-    axis.set_xticklabels(data['quench'], rotation=90, ha='right')
-    axis.grid(True, linestyle='--', alpha=0.4)
+        ax5.text(bar.get_x() + bar.get_width()/2, height + 10, str(height), ha='center', fontsize=8)
+    ax5.set_title(f"Number of Quenches in {year} by Cryomodule (Real and Fake)", fontsize=14)
+    ax5.set_xlabel("Cryomodule Number", fontsize=14)
+    ax5.set_ylabel("Number of Quenches", fontsize=14)
+    ax5.set_xticks(np.arange(len(cryo_modules)))
+    ax5.set_xticklabels(cryo_modules, rotation=90)
+    ax5.grid(True, alpha=0.5)
+    plt.tight_layout()
+    plt.show()
+
+# plotting the number of quenches per cavity
+for cryo_label, cavity_counts in quenches_per_cavity.items():
+    cavities = list(cavity_counts.keys())
+    counts_per_cavity = list(cavity_counts.values())
+    fig6, ax6 = plt.subplots(figsize=(14, 6))
+    count_bars = ax6.bar(cavities, counts_per_cavity, color='blue')
+    ax6.set_title(f"Number of Quenches per Cavity in {cryo_label} (2022-2025)", fontsize=14)
+    ax6.set_xlabel("Cavity Number", fontsize=14)
+    ax6.set_ylabel("Number of Quenches", fontsize=14)
+    ax6.set_xticks(np.arange(len(cavities)))
+    ax6.set_xticklabels(cavities, rotation=90)
+    ax6.grid(True, alpha=0.5)
     plt.tight_layout()
     plt.show()
