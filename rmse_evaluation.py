@@ -47,6 +47,19 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     # error metrics using numpy
     rmse = np.sqrt(np.mean((fault_data - fitted_amplitude)**2))
 
+    # plotting the fit over the raw cavity amplitude data
+    plt.figure(figsize=(8, 5))
+    plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
+    plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
+    plt.xlabel("Time in Seconds")
+    plt.ylabel("Amplitude")
+    plt.title("Exponential Fit vs Raw Amplitude")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+    plt.close()
+
     return rmse
 
 folder_path = "C:/Users/leila/Documents/Visual Studio/slac_quenches_2025/quench_data_per_cryomodule"

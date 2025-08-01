@@ -251,6 +251,9 @@ for cryo_label, cavity_counts in quenches_per_cavity.items():
     counts_per_cavity = list(cavity_counts.values())
     fig6, ax6 = plt.subplots(figsize=(14, 6))
     count_bars = ax6.bar(cavities, counts_per_cavity, color='blue')
+    for bar in count_bars:
+        height = bar.get_height()
+        ax6.text(bar.get_x() + bar.get_width()/2, height + 100, str(height), ha='center', fontsize=8)        
     ax6.set_title(f"Number of Quenches per Cavity in {cryo_label} (2022-2025)", fontsize=14)
     ax6.set_xlabel("Cavity Number", fontsize=14)
     ax6.set_ylabel("Number of Quenches", fontsize=14)
