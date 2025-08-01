@@ -34,11 +34,13 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
 
     is_real = loaded_q < thresh_for_quench
     
+
     """
     CALCULATION OF FITTING ERROR
     Calculates how well the exponential fit A(t) = A0 * exp(-pi*f*t / Q) matches the waveform data.
     Returns error metrics like MSE, RMSE, and residuals.
     """
+
     # fitted_amplitude is created using the dacay rate (exponential term) that we got from np.polyfit
     fitted_amplitude = pre_quench_amp * np.exp(-exponential_term * time_data)
 
@@ -146,12 +148,12 @@ for file_path, data in rmse_per_cryomodule.items():
     if not data['rmse']:
         continue
 
-    fig7, ax7 = plt.subplots(figsize=(14, 6))
-    bars = ax7.bar(data['quench'], data['rmse'], color='darkorange')
+    fig, ax = plt.subplots(figsize=(14, 6))
+    bars = ax.bar(data['quench'], data['rmse'], color='darkorange')
     
     for bar in bars:
         height = bar.get_height()
-        ax7.text(
+        ax.text(
             bar.get_x() + bar.get_width() / 2,
             height + 0.01,    # Adjust offset as needed
             f"{height:.3f}",  # You can round the RMSE value
@@ -161,12 +163,12 @@ for file_path, data in rmse_per_cryomodule.items():
         )
 
     # plotting RMSE distribution 
-    ax7.set_title(f'RMSE per Real Quench in "{os.path.basename(file_path)}"')
-    ax7.set_xlabel('Quench Timestamp')
-    ax7.set_ylabel('RMSE Value')
-    ax7.set_xticks(range(len(data['quench'])))
-    ax7.set_xticklabels(data['quench'], rotation=90, ha='right')
-    ax7.grid(True, alpha=0.4)
+    ax.set_title(f'RMSE per Real Quench in "{os.path.basename(file_path)}"')
+    ax.set_xlabel('Quench Timestamp')
+    ax.set_ylabel('RMSE Value')
+    ax.set_xticks(range(len(data['quench'])))
+    ax.set_xticklabels(data['quench'], rotation=90, ha='right')
+    ax.grid(True, alpha=0.4)
     plt.tight_layout()
     plt.show()
 
@@ -181,16 +183,16 @@ for file_path, waveforms in waveform_data_per_cryomodule.items():
     time_list = waveforms['time']
 
     for i in range(len(cavity_list)):
-        fig8, ax8 = plt.subplots(figsize=(8,5))
+        fig2, ax2 = plt.subplots(figsize=(8,5))
         time = time_list[i]
-        ax8.plot(time, cavity_list[i], label='Cavity Amplitude (MV)', color='blue')
-        ax8.plot(time, forward_list[i], label='Forward Power', color='green')
-        ax8.plot(time, reverse_list[i], label='Reverse Power', color='red')
-        ax8.plot(time, decay_list[i], label='Decay Fit', color='purple', linestyle='--')
-        ax8.set_title(f'Waveforms for {quench_labels[i]} in {os.path.basename(file_path)}', fontsize=12)
-        ax8.set_xlabel('Time (s)')
-        ax8.set_ylabel('Amplitude / Power')
-        ax8.legend()
-        ax8.grid(True, alpha=0.5)
+        ax2.plot(time, cavity_list[i], label='Cavity Amplitude (MV)', color='blue')
+        ax2.plot(time, forward_list[i], label='Forward Power', color='green')
+        ax2.plot(time, reverse_list[i], label='Reverse Power', color='red')
+        ax2.plot(time, decay_list[i], label='Decay Fit', color='purple', linestyle='--')
+        ax2.set_title(f'Waveforms for {quench_labels[i]} in {os.path.basename(file_path)}', fontsize=12)
+        ax2.set_xlabel('Time (s)')
+        ax2.set_ylabel('Amplitude / Power')
+        ax2.legend()
+        ax2.grid(True, alpha=0.5)
         plt.tight_layout()
         plt.show()
