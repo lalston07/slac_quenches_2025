@@ -48,34 +48,80 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     return rmse
 
 
-
-
 """
-This section of code plots the number of quenches per cryomodule (real or fake)
-
 Questions answered with this plot:
 (1) Which cryomodule quenched the most?
 (2) Which cryomodule quenched the least?
+(3) How many real quenches per cryomodule?
+(4) How many fake quenches per cryomodule?
+(5) How many quenches per year?
+(6) Which cavity quenched the most?
+(7) Which cavity quenched the least?
 """
 
 folder_path = "C:/Users/leila/Documents/Visual Studio/slac_quenches_2025/quench_data_per_cryomodule"
 h5_files = [f for f in os.listdir(folder_path) if f.endswith('.h5')]
 
-quench_counts_per_cryo = {} # initializing dictionary 
-cryo_names = []             # initializing list
+quench_counts_per_cryo = {}     # initializing dictionary 
+cryo_names = []                 # initializing list
+real_quenches_per_cryo = {}     # counts per cryomodule for classified real
+fake_quenches_per_cryo = {}     # counts per cryomodule for classified fake
+quenches_per_cavity = {}
+quenches_per_year = {}
+quenches_per_month = {}
+quenches_per_day = {}
 
 for file in h5_files:
     file_path = os.path.join(folder_path, file)
     cryo_label = file.replace("quench_data_", "").replace(".h5", "")
     cryo_names.append(cryo_label)   # cryo_label is the key
 
-    if cryo_label not in quench_counts_per_cryo:
-        quench_counts_per_cryo[cryo_label] = 0
+    # intializing counts for each cryomodule
+    quench_counts_per_cryo[cryo_label] = 0
+    real_quenches_per_cryo[cryo_label] = 0
+    fake_quenches_per_cryo[cryo_label] = 0
+    quenches_per_cavity[cryo_label] = {}
+    quenches_per_year[cryo_label] = {}
+    quenches_per_month[cryo_label] = {}
+    quenches_per_day[cryo_label] = {}
 
     with h5py.File(file_path, 'r') as f:
         for cavity_num in f.keys():
-            cav_group = f[cavity_num]
-            quench_counts_per_cryo[cryo_label] += cav_group.attrs.get('quench_count', 0)
+            cavity_group = f[cavity_num]
+            quench_counts_per_cryo[cryo_label] += cavity_group.attrs.get('quench_count', 0)
+
+            cavity_count = cavity_group.attrs.get("quench_count", 0)
+            quenches_per_cavity[cryo_label][cavity_num] = cavity_count
+
+            for year in cavity_group.keys():
+                year_group = cavity_group[year]
+                year_count = year_group.attrs.get("quench_count", 0)
+                
+                if year not in quenches_per_year[cryo_label]:
+                    quenches_per_year[cryo_label][year] = 0
+                
+                quenches_per_year[cryo_label][year] += year_count
+
+                for month in year_group.keys():
+                    month_group = year_group[month]
+                    
+                    month_count = month_group.attrs.get("quench_count", 0)
+                    quenches_per_month[cryo_label][month] = month_count
+
+                    for day in month_group.keys():
+                        day_group = month_group[day]
+
+                        day_count = day_group.attrs.get("quench_count", 0)
+                        quenches_per_day[cryo_label][day] = day_count
+
+                        for quench_timestamp in day_group.keys():
+                            quench_group = day_group[quench_timestamp]
+                            classification = quench_group.attrs.get("quench_classification", None)
+
+                            if classification == True:
+                                real_quenches_per_cryo[cryo_label] += 1
+                            elif classification == False:
+                                fake_quenches_per_cryo[cryo_label] += 1
 
 for cryomodule, count in quench_counts_per_cryo.items():   
     print(f"{cryomodule}: {count} total quenches")
@@ -94,67 +140,6 @@ plt.tight_layout()
 plt.grid(True, alpha=0.5)
 plt.show()
 
-
-
-
-"""
-This section of code plots the number of real and fake quenches per cryomodule 
-
-Questions answered with these plots:
-(1) How many real quenches per cryomodule?
-(2) How many fake quenches per cryomodule?
-(3) How many quenches per year?
-"""
-real_quenches_per_cryo = {}     # counts per cryomodule for classified real
-fake_quenches_per_cryo = {}     # counts per cryomodule for classified fake
-quenches_per_year = {}          # counts per cryomodule by year
-quenches_per_cavity = {}
-
-for file in h5_files:
-    file_path = os.path.join(folder_path, file)
-    cryo_label = file.replace("quench_data_", "").replace(".h5", "")
-
-    # intializing counts for real and fake classifications
-    real_quenches_per_cryo[cryo_label] = 0
-    fake_quenches_per_cryo[cryo_label] = 0
-    quenches_per_year[cryo_label] = {}
-    quenches_per_cavity[cryo_label] = {}
-
-    with h5py.File(file_path, 'r') as f:
-        for cavity_num in f.keys():
-            cavity_group = f[cavity_num]
-            count = 0
-
-            if cavity_num not in quenches_per_cavity[cryo_label]:
-                quenches_per_cavity[cryo_label][cavity_num] = 0
-
-            for year in cavity_group.keys():
-                year_group = cavity_group[year]
-
-                if year not in quenches_per_year[cryo_label]:
-                    quenches_per_year[cryo_label][year] = 0
-
-                for month in year_group.keys():
-                    month_group = year_group[month]
-                    
-                    for day in month_group.keys():
-                        day_group = month_group[day]
-
-                        for quench_timestamp in day_group.keys():
-                            quench_group = day_group[quench_timestamp]
-                            classification = quench_group.attrs.get("quench_classification", None)
-                            
-                            if classification is None:
-                                continue
-                            
-                            quenches_per_year[cryo_label][year] += 1
-                            quenches_per_cavity[cryo_label][cavity_num] += 1
-
-                            if classification == True:
-                                real_quenches_per_cryo[cryo_label] += 1
-                            elif classification == False:
-                                fake_quenches_per_cryo[cryo_label] += 1
-
 print("Real Quenches Per Cryomodule (Classified by Validation Method):\n")
 for cryomodule, count in real_quenches_per_cryo.items():   
     print(f"{cryomodule}: {count} real quenches")
@@ -170,8 +155,8 @@ fake_counts = [fake_quenches_per_cryo[cm] for cm in all_cryomodules]
 x = np.arange(len(all_cryomodules))
 width = 0.4
 
-# plotting both real and fake quench data on scatter plot
-fig, ax = plt.subplots(figsize=(15, 10))
+# plotting both real and fake quench data on bar chart
+fig, ax = plt.subplots(figsize=(30, 10))
 real_bars = ax.bar(x, real_counts, label='Real Quenches', color='green')
 fake_bars = ax.bar(x, fake_counts, bottom=real_counts, label='Fake Quenches', color='red')
 ax.set_xlabel('Cryomodule', fontsize=14)
@@ -181,7 +166,7 @@ ax.set_xticks(x)
 ax.set_xticklabels(all_cryomodules, rotation=90)
 ax.legend()
 ax.grid(True, alpha=0.5)
-# plt.tight_layout()
+plt.tight_layout()
 plt.show()
 
 # plotting only real quench data
@@ -251,9 +236,9 @@ for cryo_label, cavity_counts in quenches_per_cavity.items():
     counts_per_cavity = list(cavity_counts.values())
     fig6, ax6 = plt.subplots(figsize=(14, 6))
     count_bars = ax6.bar(cavities, counts_per_cavity, color='blue')
-    for bar in count_bars:
-        height = bar.get_height()
-        ax6.text(bar.get_x() + bar.get_width()/2, height + 100, str(height), ha='center', fontsize=8)        
+    # for bar in count_bars:
+    #     height = bar.get_height()
+    #     ax6.text(bar.get_x() + bar.get_width()/2, height + 100, str(height), ha='center', fontsize=8)        
     ax6.set_title(f"Number of Quenches per Cavity in {cryo_label} (2022-2025)", fontsize=14)
     ax6.set_xlabel("Cavity Number", fontsize=14)
     ax6.set_ylabel("Number of Quenches", fontsize=14)
