@@ -4,11 +4,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import re
 import os
-from matplotlib.animation import FuncAnimation
+import matplotlib.animation as animation
 
 # filename: "quench_data_CM31.h5"
 # real quench file: CAV8/2022/07/01/12:16:28
 # fake quench file: CAV8/2022/06/30/16:49:05
+
+# colors to use:
+colors = ['#377eb8', '#ff7f00', '#4daf4a',
+        '#f781bf', '#a65628', '#984ea3',
+        '#999999', '#e41a1c', '#dede00']
 
 folder_path = "C:/Users/leila/Documents/Visual Studio/slac_quenches_2025/quench_data_per_cryomodule"
 h5_files = ['quench_data_CM31.h5']
@@ -27,6 +32,7 @@ with h5py.File(file_path, 'r') as f:
     for path in quench_paths:
         if path in f:
             quench_group = f[path]
+            print(path)
             # print(f"Datasets in {path}: {list(quench_group.keys())}")
 
             # getting the waveform data
@@ -41,25 +47,25 @@ with h5py.File(file_path, 'r') as f:
             ax2 = ax1.twinx()
 
             # axis formatting 
-            ax1.set_xlim(-0.05, 0.05)
+            ax1.set_xlim(-0.03, 0.03)
             ax1.set_ylim(cavity_data.min(), cavity_data.max() + 20)
-            ax2.set_ylim(reverse_data.min(), reverse_data.max() + 10)
-            ax1.set_xlabel("Time in Seconds")
-            ax1.set_ylabel("Amplitude in MV")
-            ax2.set_ylabel("Power in W²")
-            ax1.set_title(f"{filename}: {path}")
+            ax2.set_ylim(reverse_data.min(), reverse_data.max() + 2)
+            ax1.set_xlabel("Time in Seconds", fontsize=14)
+            ax1.set_ylabel("Amplitude in MV", fontsize=14)
+            ax2.set_ylabel("Power in W²", fontsize=14)
+            ax1.set_title(f"{path} Waveform Plot", fontsize=14)
 
             # creating line objects for each waveform
-            line_cav, = ax1.plot([], [], label="Cacvity (MV)", color='blue', linewidth=4)   # plot([], []) created an empty line object which is updated frame by frame
+            line_cav, = ax1.plot([], [], label="Cavity (MV)", color='#377eb8', linewidth=5)   # plot([], []) created an empty line object which is updated frame by frame
             lines = [line_cav]
 
-            line_dec, = ax1.plot([], [], label = "Decay Reference (MV)", color='orange', linestyle="--", linewidth=1)
+            line_dec, = ax1.plot([], [], label = "Decay Reference (MV)", color='#ff7f00', linestyle="--", linewidth=3)
             lines.append(line_dec)
 
-            line_fwd, = ax2.plot([], [], label="Forward Power (W²)", color='green', linewidth=3)
+            line_fwd, = ax2.plot([], [], label="Forward Power (W²)", color='#4daf4a', linewidth=4)
             lines.append(line_fwd)
 
-            line_rev, = ax2.plot([], [], label="Reverse Power (W²)", color='red', linewidth=3)
+            line_rev, = ax2.plot([], [], label="Reverse Power (W²)", color='#e41a1c', linewidth=4)
             lines.append(line_rev)
 
             # combining the legend
@@ -86,21 +92,48 @@ with h5py.File(file_path, 'r') as f:
             
             # making it so that time starts at the xlimit (no delay in animation)
             # np.argmax() returns the index of when time_data >= -0.05 so we can find xlimit starting point
-            visible_start = np.argmax(time_data >= -0.05)
-            visible_end = np.argmax(time_data >= 0.05)
+            visible_start = np.argmax(time_data >= -0.03)
+            visible_end = np.argmax(time_data >= 0.03)
 
             # this function runs update(frame) for each frame
             # matplotlib.animation.FunctionAnimation(fig, func, frames=None, init_func=None, blit=True)
             # frames=range(...) makes it so that we plot the time points after time=-0.05 until the waveform is finished
             # blit=True ensures that only the parts that change are redrawn and not the whole figure
-            ani = FuncAnimation(
+            ani = animation.FuncAnimation(
                 fig, update, frames=range(visible_start, visible_end), init_func=init,
                 blit=True, interval=10
             )
 
             plt.tight_layout()
+
+            # to save the animation as a gif using Pillow
+            ani.save(f"{path.replace('/', '_').replace(':', "-")}_quench.gif", writer="pillow", fps=20)
             plt.show()
+
+            # plotting png of waveforms to show comparisons
+            fig2, ax3 = plt.subplots()
+            ax4 = ax3.twinx()
+            cav, = ax3.plot(time_data, cavity_data, label="Cavity (MV)", color='#377eb8', linewidth=5)
+            dec, = ax3.plot(time_data, decay_data, label = "Decay Reference (MV)", color='#ff7f00', linestyle="--", linewidth=3)
+            fwd, = ax4.plot(time_data, forward_data, label="Forward Power (W²)", color='#4daf4a', linewidth=4)
+            rev, = ax4.plot(time_data, reverse_data, label="Reverse Power (W²)", color='#e41a1c', linewidth=4)
+            ax3.set_xlim(-0.03, 0.03)
+            ax3.set_ylim(cavity_data.min(), cavity_data.max() + 20)
+            ax4.set_ylim(reverse_data.min(), reverse_data.max() + 2)
+            ax3.set_xlabel("Time in Seconds", fontsize=14)
+            ax3.set_ylabel("Amplitude in MV", fontsize=14)
+            ax4.set_ylabel("Power in W²", fontsize=14)
+            ax3.set_title(f"{path} Waveform Plot", fontsize=14)
+            ax3.legend(
+                handles=[cav, dec, fwd, rev],
+                labels=["Cavity (MV)", "Decay Reference (MV)", "Forward Power (W²)", "Reverse Power (W²)"],
+                loc='upper right'
+            )
+            plt.tight_layout()
+            fig2.savefig(f"{path.replace('/', '_').replace(':', "-")}_quench.png", dpi=300)
+            plt.show()
+
         else:
-            print(f"Path not found: {quench_paths}")
+            print(f"Path not found: {path}")
 
     

@@ -54,6 +54,23 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     :param wait_for_update: bool
     :return: bool representing whether quench was real
     """
+    # starts the time closer to when the quench happens to make the fit more accurate
+    time_0 = 0
+    for time_0, timestamp in enumerate(time_data):
+        if timestamp >= 0:
+            break
+    
+    fault_data = fault_data[time_0:]
+    time_data = time_data[time_0:]
+
+    # ends the time closer to when the quench is over to eliminate when the amplitude=0
+    end_decay = len(fault_data) - 1
+    for end_decay, amp in enumerate(fault_data):
+        if amp < 0.002:
+            break
+    
+    fault_data = fault_data[:end_decay]
+    time_data = time_data[:end_decay]
 
     pre_quench_amp = fault_data[0]
 

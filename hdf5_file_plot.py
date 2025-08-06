@@ -213,8 +213,8 @@ plt.show()
 
 # plotting number of quenches per year for each cryomodule
 all_years = sorted({year for cryo in quenches_per_year for year in quenches_per_year[cryo]})
+cryo_modules = sorted(quenches_per_year.keys())
 for year in all_years:
-    cryo_modules = sorted(quenches_per_year.keys())
     counts = [quenches_per_year[cryo].get(year, 0) for cryo in cryo_modules]
     fig5, ax5 = plt.subplots(figsize=(14,6))
     count_bars = ax5.bar(cryo_modules, counts, color='blue')
@@ -230,20 +230,37 @@ for year in all_years:
     plt.tight_layout()
     plt.show()
 
+# plotting number of quenches per year for each cryomodule (all years on same scatter plot)
+fig6, ax6 = plt.subplots(figsize=(14,6))
+colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#984ea3']
+for i, year in enumerate(all_years):
+    counts = [quenches_per_year[cryo].get(year, 0) for cryo in cryo_modules]
+    ax6.scatter(cryo_modules, counts, label=year, color=colors[i], s=60, alpha=0.7)
+    # ax6.plot(cryo_modules, counts, label=year, color=colors[i], marker='o', markersize=6, linewidth=2, alpha=0.8)
+ax6.set_title("Number of Quenches per Cryomodule (All Years)", fontsize=14)
+ax6.set_xlabel("Cryomodule Number", fontsize=14)
+ax6.set_ylabel("Number of Quenches", fontsize=14)
+ax6.set_xticks(np.arange(len(cryo_modules)))
+ax6.set_xticklabels(cryo_modules, rotation=90)
+ax6.legend(title="Year")
+ax6.grid(True, alpha=0.5)
+plt.tight_layout()
+plt.show()
+
 # plotting the number of quenches per cavity
 for cryo_label, cavity_counts in quenches_per_cavity.items():
     cavities = list(cavity_counts.keys())
     counts_per_cavity = list(cavity_counts.values())
-    fig6, ax6 = plt.subplots(figsize=(14, 6))
-    count_bars = ax6.bar(cavities, counts_per_cavity, color='blue')
+    fig7, ax7 = plt.subplots(figsize=(14, 6))
+    count_bars = ax7.bar(cavities, counts_per_cavity, color='blue')
     # for bar in count_bars:
     #     height = bar.get_height()
     #     ax6.text(bar.get_x() + bar.get_width()/2, height + 100, str(height), ha='center', fontsize=8)        
-    ax6.set_title(f"Number of Quenches per Cavity in {cryo_label} (2022-2025)", fontsize=14)
-    ax6.set_xlabel("Cavity Number", fontsize=14)
-    ax6.set_ylabel("Number of Quenches", fontsize=14)
-    ax6.set_xticks(np.arange(len(cavities)))
-    ax6.set_xticklabels(cavities, rotation=90)
-    ax6.grid(True, alpha=0.5)
+    ax7.set_title(f"Number of Quenches per Cavity in {cryo_label} (2022-2025)", fontsize=14)
+    ax7.set_xlabel("Cavity Number", fontsize=14)
+    ax7.set_ylabel("Number of Quenches", fontsize=14)
+    ax7.set_xticks(np.arange(len(cavities)))
+    ax7.set_xticklabels(cavities, rotation=90)
+    ax7.grid(True, alpha=0.5)
     plt.tight_layout()
     plt.show()
