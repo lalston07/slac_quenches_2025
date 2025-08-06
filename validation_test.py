@@ -220,15 +220,16 @@ ax1.tick_params(axis='y', labelcolor='blue')
 plt.xticks(rotation=90)
 ax1.grid(True, linestyle='--')
 
-# plotting R² values
-ax2 = ax1.twinx()
-ax2.set_ylabel('R² Value', color='darkorange', fontsize=14)
-ax2.plot(filename_list, r2_values, marker='o', color='darkorange', label='R²')
-ax2.set_ylim(-2, 1.2)
-ax2.tick_params(axis='y', labelcolor='darkorange')
+# # plotting R² values
+# ax2 = ax1.twinx()
+# ax2.set_ylabel('R² Value', color='darkorange', fontsize=14)
+# ax2.plot(filename_list, r2_values, marker='o', color='darkorange', label='R²')
+# ax2.set_ylim(-2, 1.2)
+# ax2.tick_params(axis='y', labelcolor='darkorange')
 
 fig.legend(loc='upper right', bbox_to_anchor=(0.9, 0.9))
-fig.suptitle(f"Quench Validation: RSME and R² Data for Cryomodule {parts[2][:2]} Cavity {parts[2][2]}", fontsize=14)
+# fig.suptitle(f"Quench Validation: RSME and R² Data for Cryomodule {parts[2][:2]} Cavity {parts[2][2]}", fontsize=14)
+fig.suptitle(f"Quench Validation: RMSE Values for Cryomodule {parts[2][:2]} Cavity {parts[2][2]}", fontsize=14)
 fig.tight_layout()
 # fig.savefig('validation_error_calculation.png', dpi=300, bbox_inches='tight')
 plt.show()

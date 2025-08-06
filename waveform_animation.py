@@ -21,13 +21,19 @@ h5_files = ['quench_data_CM31.h5']
 real_quench_path = "CAV8/2022/07/01/12:16:28"
 fake_quench_path = "CAV8/2022/06/30/16:49:05"
 
+normal_real_quench = "CAV8/2023/08/03/19:38:22"
+normal_fake_quench = "CAV8/2022/10/09/11:23:38"
+false_classification_quench = "CAV8/2022/12/03/10:11:37"
+
 filename = "quench_data_CM31.h5"
 file_path = os.path.join(folder_path, filename)
 
 with h5py.File(file_path, 'r') as f:
-    quench_paths = ["CAV8/2022/07/01/12:16:28", "CAV8/2022/06/30/16:49:05"]
+    # quench_paths = ["CAV8/2022/07/01/12:16:28", "CAV8/2022/06/30/16:49:05"]
     # real_quench_path = "CAV8/2022/07/01/12:16:28"
     # fake_quench_path = "CAV8/2022/06/30/16:49:05"
+
+    quench_paths = [false_classification_quench]
 
     for path in quench_paths:
         if path in f:
@@ -48,8 +54,8 @@ with h5py.File(file_path, 'r') as f:
 
             # axis formatting 
             ax1.set_xlim(-0.03, 0.03)
-            ax1.set_ylim(cavity_data.min(), cavity_data.max() + 20)
-            ax2.set_ylim(reverse_data.min(), reverse_data.max() + 2)
+            ax1.set_ylim(cavity_data.min(), cavity_data.max())
+            ax2.set_ylim(reverse_data.min(), reverse_data.max())
             ax1.set_xlabel("Time in Seconds", fontsize=14)
             ax1.set_ylabel("Amplitude in MV", fontsize=14)
             ax2.set_ylabel("Power in W²", fontsize=14)
@@ -118,8 +124,8 @@ with h5py.File(file_path, 'r') as f:
             fwd, = ax4.plot(time_data, forward_data, label="Forward Power (W²)", color='#4daf4a', linewidth=4)
             rev, = ax4.plot(time_data, reverse_data, label="Reverse Power (W²)", color='#e41a1c', linewidth=4)
             ax3.set_xlim(-0.03, 0.03)
-            ax3.set_ylim(cavity_data.min(), cavity_data.max() + 20)
-            ax4.set_ylim(reverse_data.min(), reverse_data.max() + 2)
+            ax3.set_ylim(cavity_data.min(), cavity_data.max())
+            ax4.set_ylim(reverse_data.min(), reverse_data.max())
             ax3.set_xlabel("Time in Seconds", fontsize=14)
             ax3.set_ylabel("Amplitude in MV", fontsize=14)
             ax4.set_ylabel("Power in W²", fontsize=14)

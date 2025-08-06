@@ -48,19 +48,19 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     rmse = np.sqrt(np.mean((fault_data - fitted_amplitude)**2))
     r2 = 1 - (np.sum((fault_data - fitted_amplitude)**2) / np.sum((fault_data - np.mean(fault_data))**2))
 
-    # # plotting the fit over the raw cavity amplitude data
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
-    # plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
-    # plt.xlabel("Time in Seconds")
-    # plt.ylabel("Amplitude")
-    # plt.ylim(0, 40)
-    # plt.title(f"Exponential Fit vs Raw Amplitude - RMSE = {rmse}")
-    # plt.legend()
-    # plt.grid(True)
-    # plt.tight_layout()
-    # plt.show()
-    # plt.close()
+    # plotting the fit over the raw cavity amplitude data
+    plt.figure(figsize=(8, 5))
+    plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
+    plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
+    plt.xlabel("Time in Seconds")
+    plt.ylabel("Amplitude")
+    plt.ylim(0, 15)
+    plt.title(f"Exponential Fit vs Raw Amplitude (RMSE = {rmse})")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+    plt.close()
 
     return rmse, r2
 
@@ -129,7 +129,8 @@ for file in filtered_h5_files:
                                 quench_group = day_group[quench_timestamp]
 
                                 classification = quench_group.attrs.get("quench_classification", None)
-                                
+                                filename = quench_group.attrs.get("filename")
+
                                 if classification == True: 
                                     # if quench_timestamp=="10:11:37" or quench_timestamp=="10:11:42":
                                     #     false_classification_count += 1
@@ -146,7 +147,7 @@ for file in filtered_h5_files:
                                         q_value = quench_group.attrs.get("saved_q_value")
                                         
                                         # calculating RMSE
-                                        # print(f"Fit for {cavity_num}/{year}/{month}/{day}/{quench_timestamp}")
+                                        print(f"Fit for {cavity_num}/{year}/{month}/{day}/{quench_timestamp}")
                                         rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_value, frequency=1300000000.0)
                                         rmse_values.append(rmse)
                                         r2_values.append(r2)
@@ -165,6 +166,28 @@ for file in filtered_h5_files:
                                         print(f"Error in file {file_path}, timestamp {quench_timestamp}: {e}")
                                 else:
                                     fake_quench_count += 1
+                                    if quench_timestamp=="11:23:38":
+                                        time_data = quench_group['time_seconds'][:]
+                                        cavity_data = quench_group['cavity_amplitude_MV'][:]
+                                        forward_data = quench_group['forward_power_W2'][:]
+                                        reverse_data = quench_group['reverse_power_W2'][:]
+                                        decay_data = quench_group['decay_reference_MV'][:]
+                                        q_value = quench_group.attrs.get("saved_q_value")
+
+                                        print(f"\nFake Quench Fit for {cavity_num}/{year}/{month}/{day}/{quench_timestamp}")
+                                        rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_value, frequency=1300000000.0)
+                                        rmse_values.append(rmse)
+                                        r2_values.append(r2)
+
+                                        full_timestamp = f"{cavity_num}-{year}-{month}-{day}-{quench_timestamp}"
+                                        quench_names.append(full_timestamp)
+
+                                        # saving waveforms
+                                        cavity_waveforms.append(cavity_data)
+                                        forward_waveforms.append(forward_data)
+                                        reverse_waveforms.append(reverse_data)
+                                        decay_waveforms.append(decay_data)
+                                        time_waveforms.append(time_data)
     
     # storing rmse data per file/cryomodule in dictionary
     rmse_per_cryomodule[file_path] = {
@@ -250,7 +273,7 @@ for file_path, waveforms in waveform_data_per_cryomodule.items():
         ax2.set_ylim(cavity_list[i].min(), cavity_list[i].max() + 20)
         ax3.set_ylim(reverse_list[i].min(), reverse_list[i].max())
         ax2.set_title(f'Waveforms for {quench_labels[i]} in {os.path.basename(file_path)}', fontsize=12)
-        ax2.set_xlabel('Time (s)')
+        ax2.set_xlabel('Time in Seconds')
         ax2.set_ylabel('Amplitude in MV')
         ax3.set_ylabel('Power in W²')
         ax3.legend(
