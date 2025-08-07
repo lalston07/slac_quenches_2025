@@ -48,19 +48,19 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     rmse = np.sqrt(np.mean((fault_data - fitted_amplitude)**2))
     r2 = 1 - (np.sum((fault_data - fitted_amplitude)**2) / np.sum((fault_data - np.mean(fault_data))**2))
 
-    # plotting the fit over the raw cavity amplitude data
-    plt.figure(figsize=(8, 5))
-    plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
-    plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
-    plt.xlabel("Time in Seconds")
-    plt.ylabel("Amplitude")
-    plt.ylim(0, 15)
-    plt.title(f"Exponential Fit vs Raw Amplitude (RMSE = {rmse})")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-    plt.close()
+    # # plotting the fit over the raw cavity amplitude data
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
+    # plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
+    # plt.xlabel("Time in Seconds")
+    # plt.ylabel("Amplitude")
+    # plt.ylim(0, 15)
+    # plt.title(f"Exponential Fit vs Raw Amplitude (RMSE = {rmse})")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.show()
+    # plt.close()
 
     return rmse, r2
 
@@ -238,7 +238,7 @@ for file in filtered_h5_files:
 
 print(f"Real Quenches in CM31 CAV8: {real_quench_count}")
 print(f"Fake Quenches in CM31 CAV8: {fake_quench_count}")
-print(f"Falsely Classifed Quenches in CM31 CAV8: {false_classification_count}")
+# print(f"Falsely Classifed Quenches in CM31 CAV8: {false_classification_count}")
 
 # pie chart of real vs fake classified quenches in the whole machine
 labels = ['Real Quenches', 'Fake Quenches']
@@ -260,7 +260,7 @@ for file_path, waveforms in waveform_data_per_cryomodule.items():
     decay_list = waveforms['decay']
     time_list = waveforms['time']
 
-    for i in range(len(cavity_list)):
+    for i in range(len(cavity_list))[:3]:
         # print(f"Quench File Count: {i+1}")
         fig2, ax2 = plt.subplots(figsize=(8,5))
         ax3 = ax2.twinx()

@@ -128,7 +128,7 @@ for cryomodule, count in quench_counts_per_cryo.items():
 
 # plot for quenches per cryomodule
 plt.figure(figsize=(12,6))
-bars = plt.bar(cryo_names, quench_counts_per_cryo.values(), color='skyblue')
+bars = plt.bar(cryo_names, quench_counts_per_cryo.values(), color='#377eb8')
 for bar in bars:
     height = bar.get_height()
     plt.text(bar.get_x() + bar.get_width()/2, height + 30, str(height), ha='center', fontsize=8)
@@ -157,8 +157,8 @@ width = 0.4
 
 # plotting both real and fake quench data on bar chart
 fig, ax = plt.subplots(figsize=(30, 10))
-real_bars = ax.bar(x, real_counts, label='Real Quenches', color='green')
-fake_bars = ax.bar(x, fake_counts, bottom=real_counts, label='Fake Quenches', color='red')
+real_bars = ax.bar(x, real_counts, label='Real Quenches', color='#4daf4a')
+fake_bars = ax.bar(x, fake_counts, bottom=real_counts, label='Fake Quenches', color='#e41a1c')
 ax.set_xlabel('Cryomodule', fontsize=14)
 ax.set_ylabel('Number of Quenches', fontsize=14)
 ax.set_title('Real vs Fake Quenches per Cryomodule (2022-2025)', fontsize=14)
@@ -166,12 +166,29 @@ ax.set_xticks(x)
 ax.set_xticklabels(all_cryomodules, rotation=90)
 ax.legend()
 ax.grid(True, alpha=0.5)
+ax.set_axisbelow(True)
+plt.tight_layout()
+plt.show()
+
+# plotting both real and fake quench data on bar chart (LOG SCALE)
+fig8, ax8 = plt.subplots(figsize=(30, 10))
+real_bars = ax8.bar(x, real_counts, label='Real Quenches', color='#4daf4a')
+fake_bars = ax8.bar(x, fake_counts, bottom=real_counts, label='Fake Quenches', color='#e41a1c')
+ax8.set_xlabel('Cryomodule', fontsize=14)
+ax8.set_ylabel('Number of Quenches', fontsize=14)
+ax8.set_yscale('log')
+ax8.set_title('Real vs Fake Quenches per Cryomodule on Log Scale (2022-2025)', fontsize=14)
+ax8.set_xticks(x)
+ax8.set_xticklabels(all_cryomodules, rotation=90)
+ax8.legend()
+ax8.grid(True, alpha=0.5)
+ax8.set_axisbelow(True)
 plt.tight_layout()
 plt.show()
 
 # plotting only real quench data
 fig2, ax2 = plt.subplots(figsize=(15, 7))
-real_bars = ax2.bar(x, real_counts, label='Real Quenches', color='green')
+real_bars = ax2.bar(x, real_counts, label='Real Quenches', color='#4daf4a')
 for bar in real_bars:
     height = bar.get_height()
     ax2.text(bar.get_x() + bar.get_width()/2, height + 30, str(height), ha='center', fontsize=8)
@@ -182,12 +199,13 @@ ax2.set_xticks(x)
 ax2.set_xticklabels(all_cryomodules, rotation=90)
 ax2.legend()
 ax2.grid(True, alpha=0.5)
+ax2.set_axisbelow(True)
 plt.tight_layout()
 plt.show()
 
 # plotting only fake quench data
 fig3, ax3 = plt.subplots(figsize=(15, 7))
-fake_bars = ax3.bar(x, fake_counts, label='Fake Quenches', color='red')
+fake_bars = ax3.bar(x, fake_counts, label='Fake Quenches', color='#e41a1c')
 for bar in fake_bars:
     height = bar.get_height()
     ax3.text(bar.get_x() + bar.get_width()/2, height + 30, str(height), ha='center', fontsize=8)
@@ -198,13 +216,14 @@ ax3.set_xticks(x)
 ax3.set_xticklabels(all_cryomodules, rotation=90)
 ax3.legend()
 ax3.grid(True, alpha=0.5)
+ax3.set_axisbelow(True)
 plt.tight_layout()
 plt.show()
 
 # pie chart of real vs fake classified quenches in the whole machine
 labels = ['Real Quenches', 'Fake Quenches']
 sizes = [sum(real_counts), sum(fake_counts)]
-colors = ['green', 'red']
+colors = ['#4daf4a', '#e41a1c']
 fig4, ax4 = plt.subplots()
 ax4.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
 ax4.set_title('Overall Quench Classification CM01-CM35 (2022-2025)')
@@ -217,7 +236,7 @@ cryo_modules = sorted(quenches_per_year.keys())
 for year in all_years:
     counts = [quenches_per_year[cryo].get(year, 0) for cryo in cryo_modules]
     fig5, ax5 = plt.subplots(figsize=(14,6))
-    count_bars = ax5.bar(cryo_modules, counts, color='blue')
+    count_bars = ax5.bar(cryo_modules, counts, color='#377eb8')
     for bar in count_bars:
         height = bar.get_height()
         ax5.text(bar.get_x() + bar.get_width()/2, height + 10, str(height), ha='center', fontsize=8)
@@ -227,6 +246,7 @@ for year in all_years:
     ax5.set_xticks(np.arange(len(cryo_modules)))
     ax5.set_xticklabels(cryo_modules, rotation=90)
     ax5.grid(True, alpha=0.5)
+    ax5.set_axisbelow(True)
     plt.tight_layout()
     plt.show()
 
@@ -244,6 +264,7 @@ ax6.set_xticks(np.arange(len(cryo_modules)))
 ax6.set_xticklabels(cryo_modules, rotation=90)
 ax6.legend(title="Year")
 ax6.grid(True, alpha=0.5)
+ax6.set_axisbelow(True)
 plt.tight_layout()
 plt.show()
 
@@ -252,7 +273,7 @@ for cryo_label, cavity_counts in quenches_per_cavity.items():
     cavities = list(cavity_counts.keys())
     counts_per_cavity = list(cavity_counts.values())
     fig7, ax7 = plt.subplots(figsize=(14, 6))
-    count_bars = ax7.bar(cavities, counts_per_cavity, color='blue')
+    count_bars = ax7.bar(cavities, counts_per_cavity, color='#377eb8')
     # for bar in count_bars:
     #     height = bar.get_height()
     #     ax6.text(bar.get_x() + bar.get_width()/2, height + 100, str(height), ha='center', fontsize=8)        
@@ -262,5 +283,6 @@ for cryo_label, cavity_counts in quenches_per_cavity.items():
     ax7.set_xticks(np.arange(len(cavities)))
     ax7.set_xticklabels(cavities, rotation=90)
     ax7.grid(True, alpha=0.5)
+    ax7.set_axisbelow(True)
     plt.tight_layout()
     plt.show()
