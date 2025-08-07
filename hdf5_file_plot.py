@@ -127,17 +127,19 @@ for cryomodule, count in quench_counts_per_cryo.items():
     print(f"{cryomodule}: {count} total quenches")
 
 # plot for quenches per cryomodule
-plt.figure(figsize=(12,6))
-bars = plt.bar(cryo_names, quench_counts_per_cryo.values(), color='#377eb8')
+fig1, ax1 = plt.subplots(figsize=(12,6))
+bars = ax1.bar(cryo_names, quench_counts_per_cryo.values(), color='#377eb8')
 for bar in bars:
     height = bar.get_height()
-    plt.text(bar.get_x() + bar.get_width()/2, height + 30, str(height), ha='center', fontsize=8)
-plt.xlabel('Cryomodule Number', fontsize=14)
-plt.ylabel('Total Number of Quenches', fontsize=14)
-plt.title('Number of Quenches Per Cryomodule (2022-2025)', fontsize=14)
-plt.xticks(rotation=90)
+    ax1.text(bar.get_x() + bar.get_width()/2, height + 30, str(height), ha='center', fontsize=8)
+ax1.set_xlabel('Cryomodule Number', fontsize=14)
+ax1.set_ylabel('Total Number of Quenches', fontsize=14)
+ax1.set_title('Number of Quenches Per Cryomodule (2022-2025)', fontsize=14)
+ax1.set_xticks(np.arange(len(cryo_names)))
+ax1.set_xticklabels(cryo_names, rotation=90)
 plt.tight_layout()
-plt.grid(True, alpha=0.5)
+ax1.grid(True, alpha=0.5)
+ax1.set_axisbelow(True)
 plt.show()
 
 print("Real Quenches Per Cryomodule (Classified by Validation Method):\n")
@@ -255,8 +257,8 @@ fig6, ax6 = plt.subplots(figsize=(14,6))
 colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#984ea3']
 for i, year in enumerate(all_years):
     counts = [quenches_per_year[cryo].get(year, 0) for cryo in cryo_modules]
-    ax6.scatter(cryo_modules, counts, label=year, color=colors[i], s=60, alpha=0.7)
-    # ax6.plot(cryo_modules, counts, label=year, color=colors[i], marker='o', markersize=6, linewidth=2, alpha=0.8)
+    # ax6.scatter(cryo_modules, counts, label=year, color=colors[i], s=60, alpha=0.7)
+    ax6.plot(cryo_modules, counts, label=year, color=colors[i], marker='o', markersize=6, linewidth=2, alpha=0.8)
 ax6.set_title("Number of Quenches per Cryomodule (All Years)", fontsize=14)
 ax6.set_xlabel("Cryomodule Number", fontsize=14)
 ax6.set_ylabel("Number of Quenches", fontsize=14)
@@ -274,9 +276,9 @@ for cryo_label, cavity_counts in quenches_per_cavity.items():
     counts_per_cavity = list(cavity_counts.values())
     fig7, ax7 = plt.subplots(figsize=(14, 6))
     count_bars = ax7.bar(cavities, counts_per_cavity, color='#377eb8')
-    # for bar in count_bars:
-    #     height = bar.get_height()
-    #     ax6.text(bar.get_x() + bar.get_width()/2, height + 100, str(height), ha='center', fontsize=8)        
+    for bar in count_bars:
+        height = bar.get_height()
+        ax7.text(bar.get_x() + bar.get_width()/2, height + 100, str(height), ha='center', fontsize=8)        
     ax7.set_title(f"Number of Quenches per Cavity in {cryo_label} (2022-2025)", fontsize=14)
     ax7.set_xlabel("Cavity Number", fontsize=14)
     ax7.set_ylabel("Number of Quenches", fontsize=14)
