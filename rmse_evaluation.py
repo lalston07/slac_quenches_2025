@@ -82,7 +82,7 @@ waveform_data_per_cryomodule = {}
 
 # sample_files = ["02", "03", "05", "05", "06", "10", "11", "14", "17"
 #                 "18", "19", "21", "23", "28", "30"]
-sample_files = ["31"]
+sample_files = ["12"]
 filtered_h5_files = [f for f in h5_files if any(cm in f for cm in sample_files)]
 
 rmse_values_real = []
@@ -101,6 +101,7 @@ for file in filtered_h5_files:
     reverse_waveforms = []
     decay_waveforms = []
     time_waveforms = []
+    classifications = []
 
     # initializing variables
     real_quench_count = 0
@@ -112,7 +113,7 @@ for file in filtered_h5_files:
         for cavity_num in f.keys():
             cavity_group = f[cavity_num]
 
-            if cavity_num == "CAV8":
+            if cavity_num == "CAV7":
                 for year in cavity_group.keys():
                     year_group = cavity_group[year]
 
@@ -136,6 +137,7 @@ for file in filtered_h5_files:
                                     #     false_classification_count += 1
                                     # else:
                                     real_quench_count += 1
+                                    classifications.append(classification)
 
                                     try:
                                         # getting waveform data for each "real" quench
@@ -166,32 +168,34 @@ for file in filtered_h5_files:
                                         print(f"Error in file {file_path}, timestamp {quench_timestamp}: {e}")
                                 else:
                                     fake_quench_count += 1
-                                    if quench_timestamp=="11:23:38":
-                                        time_data = quench_group['time_seconds'][:]
-                                        cavity_data = quench_group['cavity_amplitude_MV'][:]
-                                        forward_data = quench_group['forward_power_W2'][:]
-                                        reverse_data = quench_group['reverse_power_W2'][:]
-                                        decay_data = quench_group['decay_reference_MV'][:]
-                                        q_value = quench_group.attrs.get("saved_q_value")
+                                    classifications.append(classification)
 
-                                        print(f"\nFake Quench Fit for {cavity_num}/{year}/{month}/{day}/{quench_timestamp}")
-                                        rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_value, frequency=1300000000.0)
-                                        rmse_values.append(rmse)
-                                        r2_values.append(r2)
+                                    time_data = quench_group['time_seconds'][:]
+                                    cavity_data = quench_group['cavity_amplitude_MV'][:]
+                                    forward_data = quench_group['forward_power_W2'][:]
+                                    reverse_data = quench_group['reverse_power_W2'][:]
+                                    decay_data = quench_group['decay_reference_MV'][:]
+                                    q_value = quench_group.attrs.get("saved_q_value")
 
-                                        full_timestamp = f"{cavity_num}-{year}-{month}-{day}-{quench_timestamp}"
-                                        quench_names.append(full_timestamp)
+                                    # print(f"\nFake Quench Fit for {cavity_num}/{year}/{month}/{day}/{quench_timestamp}")
+                                    rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_value, frequency=1300000000.0)
+                                    rmse_values.append(rmse)
+                                    r2_values.append(r2)
 
-                                        # saving waveforms
-                                        cavity_waveforms.append(cavity_data)
-                                        forward_waveforms.append(forward_data)
-                                        reverse_waveforms.append(reverse_data)
-                                        decay_waveforms.append(decay_data)
-                                        time_waveforms.append(time_data)
+                                    full_timestamp = f"{cavity_num}-{year}-{month}-{day}-{quench_timestamp}"
+                                    quench_names.append(full_timestamp)
+
+                                    # saving waveforms
+                                    cavity_waveforms.append(cavity_data)
+                                    forward_waveforms.append(forward_data)
+                                    reverse_waveforms.append(reverse_data)
+                                    decay_waveforms.append(decay_data)
+                                    time_waveforms.append(time_data)
     
     # storing rmse data per file/cryomodule in dictionary
     rmse_per_cryomodule[file_path] = {
         'rmse': rmse_values,
+        'classification': classifications,
         'quench': quench_names, 
         'r2' : r2_values
     }
@@ -240,27 +244,29 @@ print(f"Real Quenches in CM31 CAV8: {real_quench_count}")
 print(f"Fake Quenches in CM31 CAV8: {fake_quench_count}")
 # print(f"Falsely Classifed Quenches in CM31 CAV8: {false_classification_count}")
 
-# pie chart of real vs fake classified quenches in the whole machine
-labels = ['Real Quenches', 'Fake Quenches']
-sizes = [real_quench_count, fake_quench_count]
-colors = ['#4daf4a', '#e41a1c']
-fig4, ax4 = plt.subplots()
-ax4.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-ax4.set_title('Real vs Fake Classifications Quenches CM31 CAV8 (2022-2025)')
-ax4.axis('equal')   # equal aspect ratio makes the pie chart a circle
-plt.show()
+# # pie chart of real vs fake classified quenches in the whole machine
+# labels = ['Real Quenches', 'Fake Quenches']
+# sizes = [real_quench_count, fake_quench_count]
+# colors = ['#4daf4a', '#e41a1c']
+# fig4, ax4 = plt.subplots()
+# ax4.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+# ax4.set_title('Real vs Fake Classifications Quenches CM31 CAV8 (2022-2025)')
+# ax4.axis('equal')   # equal aspect ratio makes the pie chart a circle
+# plt.show()
 
 # plotting waveforms for each "real" quench
 for file_path, waveforms in waveform_data_per_cryomodule.items():
     quench_labels = rmse_per_cryomodule[file_path]['quench']
-    
+    rmse_value = rmse_per_cryomodule[file_path]['rmse']
+    classification_value = rmse_per_cryomodule[file_path]['classification']
+
     cavity_list = waveforms['cavity']
     forward_list = waveforms['forward']
     reverse_list = waveforms['reverse']
     decay_list = waveforms['decay']
     time_list = waveforms['time']
 
-    for i in range(len(cavity_list))[:3]:
+    for i in range(len(cavity_list)):
         # print(f"Quench File Count: {i+1}")
         fig2, ax2 = plt.subplots(figsize=(8,5))
         ax3 = ax2.twinx()
@@ -272,7 +278,7 @@ for file_path, waveforms in waveform_data_per_cryomodule.items():
         ax2.set_xlim(-0.03, 0.03)
         ax2.set_ylim(cavity_list[i].min(), cavity_list[i].max() + 20)
         ax3.set_ylim(reverse_list[i].min(), reverse_list[i].max())
-        ax2.set_title(f'Waveforms for {quench_labels[i]} in {os.path.basename(file_path)}', fontsize=12)
+        ax2.set_title(f'Waveforms for {quench_labels[i]} in {os.path.basename(file_path)} \n(RMSE={rmse_value[i]}) and classification is {classification_value[i]}', fontsize=12)
         ax2.set_xlabel('Time in Seconds')
         ax2.set_ylabel('Amplitude in MV')
         ax3.set_ylabel('Power in W²')
