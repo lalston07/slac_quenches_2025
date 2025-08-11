@@ -48,19 +48,19 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     rmse = np.sqrt(np.mean((fault_data - fitted_amplitude)**2))
     r2 = 1 - (np.sum((fault_data - fitted_amplitude)**2) / np.sum((fault_data - np.mean(fault_data))**2))
 
-    # # plotting the fit over the raw cavity amplitude data
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
-    # plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
-    # plt.xlabel("Time in Seconds")
-    # plt.ylabel("Amplitude")
-    # plt.ylim(0, 15)
-    # plt.title(f"Exponential Fit vs Raw Amplitude (RMSE = {rmse})")
-    # plt.legend()
-    # plt.grid(True)
-    # plt.tight_layout()
-    # plt.show()
-    # plt.close()
+    # plotting the fit over the raw cavity amplitude data
+    plt.figure(figsize=(8, 5))
+    plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
+    plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
+    plt.xlabel("Time in Seconds")
+    plt.ylabel("Amplitude")
+    plt.ylim(0, 15)
+    plt.title(f"Exponential Fit vs Raw Amplitude (RMSE = {rmse})")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+    plt.close()
 
     return rmse, r2
 
@@ -80,11 +80,12 @@ Questions answered with this plot:
 rmse_per_cryomodule = {}
 waveform_data_per_cryomodule = {}
 
-# # using a number of sample files to make process shorter
-# sample_files = ["12"]
-# filtered_h5_files = [f for f in h5_files if any(cm in f for cm in sample_files)]
+# using a number of sample files to make process shorter
+sample_files = ["06"]
+filtered_h5_files = [f for f in h5_files if any(cm in f for cm in sample_files)]
 
-for file in h5_files:
+# for file in h5_files:
+for file in filtered_h5_files:
     file_path = os.path.join(folder_path, file)
     print(f"\nProcessing: {file_path} - {os.path.basename(file_path)}")
     cryo = os.path.basename(file_path).replace("quench_data_CM", "").split(".")[0]
@@ -283,7 +284,7 @@ for file_path, waveforms in waveform_data_per_cryomodule.items():
         ax2.set_xlim(-0.03, 0.03)
         ax2.set_ylim(cavity_list[i].min(), cavity_list[i].max() + 20)
         ax3.set_ylim(reverse_list[i].min(), reverse_list[i].max())
-        ax2.set_title(f'Waveforms for {quench_labels[i]} in {os.path.basename(file_path)} \n(RMSE={rmse_value[i]}) and classification is {classification_value[i]}', fontsize=12)
+        ax2.set_title(f'Waveforms for {quench_labels[i]} in {os.path.basename(file_path)} \n(RMSE={rmse_value[i]}; R2={r2_values[i]}) and classification is {classification_value[i]}', fontsize=12)
         ax2.set_xlabel('Time in Seconds')
         ax2.set_ylabel('Amplitude in MV')
         ax3.set_ylabel('Power in W²')

@@ -112,18 +112,18 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     print(f"RMSE = {rmse}")
     print(f"R^2 = {r2}")
 
-    # # plotting the fit over the raw cavity amplitude data
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
-    # plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
-    # plt.xlabel("Time in Seconds")
-    # plt.ylabel("Amplitude")
-    # plt.title("Exponential Fit vs Raw Amplitude")
-    # plt.legend()
-    # plt.grid(True)
-    # plt.tight_layout()
-    # plt.show()
-    # plt.close()
+    # plotting the fit over the raw cavity amplitude data
+    plt.figure(figsize=(8, 5))
+    plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
+    plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
+    plt.xlabel("Time in Seconds")
+    plt.ylabel("Amplitude")
+    plt.title("Exponential Fit vs Raw Amplitude")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+    plt.close()
 
     return is_real, rmse, r2
 
