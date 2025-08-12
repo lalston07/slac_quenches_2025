@@ -262,6 +262,7 @@ for i, year in enumerate(all_years):
 ax6.set_title("Number of Quenches per Cryomodule (All Years)", fontsize=14)
 ax6.set_xlabel("Cryomodule Number", fontsize=14)
 ax6.set_ylabel("Number of Quenches", fontsize=14)
+ax6.set_ylim(0, 4000)
 ax6.set_xticks(np.arange(len(cryo_modules)))
 ax6.set_xticklabels(cryo_modules, rotation=90)
 ax6.legend(title="Year")
