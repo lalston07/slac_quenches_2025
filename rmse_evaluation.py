@@ -52,12 +52,12 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     # plt.figure(figsize=(8, 5))
     # plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
     # plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
-    # plt.xlabel("Time in Seconds")
-    # plt.ylabel("Amplitude")
+    # plt.xlabel("Time in Seconds", fontsize=14)
+    # plt.ylabel("Amplitude", fontsize=14)
     # plt.xlim(0, 0.035)
     # plt.ylim(0, 15)
     # # plt.title(f"Exponential Fit vs Raw Amplitude (RMSE = {rmse})")
-    # plt.title(f"Exponential Fit vs Raw Cavity Amplitude \nExponential Term = {exponential_term}")
+    # plt.title(f"Exponential Fit vs Raw Cavity Amplitude \nExponential Term = {exponential_term}", fontsize=16)
     # plt.legend()
     # plt.grid(True)
     # plt.tight_layout()
@@ -85,7 +85,6 @@ waveform_data_per_cryomodule = {}
 # using a number of sample files to make process shorter
 sample_files = ["31"]
 filtered_h5_files = [f for f in h5_files if any(cm in f for cm in sample_files)]
-
 # for file in h5_files:
 for file in filtered_h5_files:
     file_path = os.path.join(folder_path, file)
@@ -162,7 +161,9 @@ for file in filtered_h5_files:
                                         rmse_per_cavity[cavity] = []
                                     rmse_per_cavity[cavity].append((rmse, quench_timestamp, classification))
 
-                                    if classification == True: 
+                                    if classification == True and (quench_timestamp=='10:11:37' or quench_timestamp=='10:11:42'): 
+                                        fake_quench_count += 1
+                                    elif classification == True:
                                         real_quench_count += 1
                                     else:
                                         fake_quench_count += 1
