@@ -48,19 +48,21 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     rmse = np.sqrt(np.mean((fault_data - fitted_amplitude)**2))
     r2 = 1 - (np.sum((fault_data - fitted_amplitude)**2) / np.sum((fault_data - np.mean(fault_data))**2))
 
-    # plotting the fit over the raw cavity amplitude data
-    plt.figure(figsize=(8, 5))
-    plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
-    plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
-    plt.xlabel("Time in Seconds")
-    plt.ylabel("Amplitude")
-    plt.ylim(0, 15)
-    plt.title(f"Exponential Fit vs Raw Amplitude (RMSE = {rmse})")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-    plt.close()
+    # # plotting the fit over the raw cavity amplitude data
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(time_data, fault_data, label='Raw Amplitude Data', marker='o')
+    # plt.plot(time_data, fitted_amplitude, label='Linear Exponential Fit', linestyle='--')
+    # plt.xlabel("Time in Seconds")
+    # plt.ylabel("Amplitude")
+    # plt.xlim(0, 0.035)
+    # plt.ylim(0, 15)
+    # # plt.title(f"Exponential Fit vs Raw Amplitude (RMSE = {rmse})")
+    # plt.title(f"Exponential Fit vs Raw Cavity Amplitude \nExponential Term = {exponential_term}")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.show()
+    # plt.close()
 
     return rmse, r2
 
@@ -81,7 +83,7 @@ rmse_per_cryomodule = {}
 waveform_data_per_cryomodule = {}
 
 # using a number of sample files to make process shorter
-sample_files = ["06"]
+sample_files = ["31"]
 filtered_h5_files = [f for f in h5_files if any(cm in f for cm in sample_files)]
 
 # for file in h5_files:
@@ -114,61 +116,62 @@ for file in filtered_h5_files:
         for cavity in f.keys():
             cavity_group = f[cavity]
 
-            for year in cavity_group.keys():
-                year_group = cavity_group[year]
+            if cryo == "31" and cavity == "CAV8":
+                for year in cavity_group.keys():
+                    year_group = cavity_group[year]
 
-                # getting quench count from cavity as a whole
-                cavity_quench_count = cavity_group.attrs.get("quench_count", 0)
-                
-                for month in year_group.keys():
-                    month_group = year_group[month]
+                    # getting quench count from cavity as a whole
+                    cavity_quench_count = cavity_group.attrs.get("quench_count", 0)
                     
-                    for day in month_group.keys():
-                        day_group = month_group[day]
+                    for month in year_group.keys():
+                        month_group = year_group[month]
+                        
+                        for day in month_group.keys():
+                            day_group = month_group[day]
 
-                        for quench_timestamp in day_group.keys():
-                            quench_group = day_group[quench_timestamp]
+                            for quench_timestamp in day_group.keys():
+                                quench_group = day_group[quench_timestamp]
 
-                            try:
-                                # getting waveform data for each "real" quench
-                                time_data = quench_group['time_seconds'][:]
-                                cavity_data = quench_group['cavity_amplitude_MV'][:]
-                                forward_data = quench_group['forward_power_W2'][:]
-                                reverse_data = quench_group['reverse_power_W2'][:]
-                                decay_data = quench_group['decay_reference_MV'][:]
-                                q_value = quench_group.attrs.get("saved_q_value")
+                                try:
+                                    # getting waveform data for each "real" quench
+                                    time_data = quench_group['time_seconds'][:]
+                                    cavity_data = quench_group['cavity_amplitude_MV'][:]
+                                    forward_data = quench_group['forward_power_W2'][:]
+                                    reverse_data = quench_group['reverse_power_W2'][:]
+                                    decay_data = quench_group['decay_reference_MV'][:]
+                                    q_value = quench_group.attrs.get("saved_q_value")
 
-                                # saving waveforms
-                                cavity_waveforms.append(cavity_data)
-                                forward_waveforms.append(forward_data)
-                                reverse_waveforms.append(reverse_data)
-                                decay_waveforms.append(decay_data)
-                                time_waveforms.append(time_data)
+                                    # saving waveforms
+                                    cavity_waveforms.append(cavity_data)
+                                    forward_waveforms.append(forward_data)
+                                    reverse_waveforms.append(reverse_data)
+                                    decay_waveforms.append(decay_data)
+                                    time_waveforms.append(time_data)
 
-                                # getting metadata
-                                filename = quench_group.attrs.get("filename")
-                                classification = quench_group.attrs.get("quench_classification", None)
-                                classifications.append(classification)
+                                    # getting metadata
+                                    filename = quench_group.attrs.get("filename")
+                                    classification = quench_group.attrs.get("quench_classification", None)
+                                    classifications.append(classification)
 
-                                # calculating error metrics
-                                rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_value, frequency=1300000000.0)
-                                rmse_values.append(rmse)
-                                r2_values.append(r2)
+                                    # calculating error metrics
+                                    rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_value, frequency=1300000000.0)
+                                    rmse_values.append(rmse)
+                                    r2_values.append(r2)
 
-                                if cavity not in rmse_per_cavity:
-                                    rmse_per_cavity[cavity] = []
-                                rmse_per_cavity[cavity].append((rmse, quench_timestamp, classification))
+                                    if cavity not in rmse_per_cavity:
+                                        rmse_per_cavity[cavity] = []
+                                    rmse_per_cavity[cavity].append((rmse, quench_timestamp, classification))
 
-                                if classification == True: 
-                                    real_quench_count += 1
-                                else:
-                                    fake_quench_count += 1
+                                    if classification == True: 
+                                        real_quench_count += 1
+                                    else:
+                                        fake_quench_count += 1
 
-                                full_timestamp = f"{cavity}-{year}-{month}-{day}-{quench_timestamp}"
-                                quench_names.append(full_timestamp)
-                            except Exception as e:
-                                # print(f"Error in file {file_path}, timestamp {quench_timestamp}: {e}")
-                                continue
+                                    full_timestamp = f"{cavity}-{year}-{month}-{day}-{quench_timestamp}"
+                                    quench_names.append(full_timestamp)
+                                except Exception as e:
+                                    # print(f"Error in file {file_path}, timestamp {quench_timestamp}: {e}")
+                                    continue
     
     # calculating average RMSE Value to determine threshold
     avg_rmse_per_cavity = {}

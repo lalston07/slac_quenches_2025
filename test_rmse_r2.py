@@ -86,7 +86,7 @@ for file in h5_files:
 
         for cavity in f.keys():
 
-            if cryo == "06":    # focusing on one cryomodule as a sample for observation
+            if cryo == "31" and cavity == "CAV8":    # focusing on one cryomodule as a sample for observation
                 cavity_group = f[cavity]
                 
                 # initializing lists
