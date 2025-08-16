@@ -85,6 +85,7 @@ waveform_data_per_cryomodule = {}
 # using a number of sample files to make process shorter
 sample_files = ["31"]
 filtered_h5_files = [f for f in h5_files if any(cm in f for cm in sample_files)]
+
 # for file in h5_files:
 for file in filtered_h5_files:
     file_path = os.path.join(folder_path, file)
@@ -223,36 +224,6 @@ waveform_data_per_cryomodule[file_path] = {
     'time': time_waveforms,
 }
 
-# for file_path, data in rmse_per_cryomodule.items():
-#     if not data['rmse']:
-#         continue
-
-#     fig, ax = plt.subplots(figsize=(14, 6))
-#     # bars = ax.bar(data['quench'], data['rmse'], color='darkorange')
-#     ax.scatter(data['quench'], data['rmse'], color='blue', label="RMSE Value")
-#     ax.scatter(data['quench'], data['r2'], color='green', label="R2 Score")
-
-#     # for bar in bars:
-#     #     height = bar.get_height()
-#     #     ax.text(
-#     #         bar.get_x() + bar.get_width() / 2,
-#     #         height + 0.01,    # Adjust offset as needed
-#     #         f"{height:.3f}",  # You can round the RMSE value
-#     #         ha='center',
-#     #         va='bottom',
-#     #         fontsize=8
-#     #     )
-
-#     # plotting RMSE distribution 
-#     ax.set_title(f'RMSE per Real Quench in "{os.path.basename(file_path)}"')
-#     ax.set_xlabel('Quench Timestamp')
-#     ax.set_ylabel('RMSE Value')
-#     # ax.set_ylim(0, 40)
-#     ax.set_xticks(range(len(data['quench'])))
-#     ax.set_xticklabels(data['quench'], rotation=90, ha='right')
-#     ax.grid(True, alpha=0.4)
-#     plt.tight_layout()
-#     plt.show()
 
 # pie chart of real vs fake classified quenches in the whole machine
 labels = ['Real Quenches', 'Fake Quenches']
