@@ -6,11 +6,6 @@ import pandas as pd
 import h5py
 import os
 import time
- 
-# extracting data using a single directory:
-# directory_path = r"G:\My Drive\ACCL_L3B_3180"
-# directory_path = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data/ACCL_L3B_3180"
-# directory_path = r"G:\.shortcut-targets-by-id\1kjgZjwGRIE-5anoMitTfYFQ6bScG9PbZ\Summer_2025\Leila\ACCL_L3B_3180"
 
 CM_num = "33"                       # CHANGES FOR EACH FILE/CRYOMODULE
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6    # fixed value to determine threshold
@@ -20,7 +15,7 @@ quenches = []
 base_directory = r"/mccfs2/u1/lcls/physics/rf_lcls2/fault_data"
 CM_matches = glob.glob(base_directory + rf'/ACCL_L*B_{CM_num}*/**/*QUENCH.txt', recursive=True)
 matched = [f for f in CM_matches if re.search(r"\d+_QUENCH.txt", f)]
-print(f"Matched files from CM{CM_num}:")
+# print(f"Matched files from CM{CM_num}:")
 quenches.extend(matched)
 print(f"Found {len(quenches)} quench files from cryomodule.")
 
@@ -146,10 +141,6 @@ with h5py.File(output_filename, 'w') as h5file:
         decay_data, decay_time = extracting_data(file, decay_ref)
         time_data, time_timestamp = extracting_data(file, time_range)
         q_data, q_time = extracting_data(file, q_value)
-
-        # in some files, freq_data[0] was a None value, so we use the fixed value of '1300000000.0 GHz' instead
-        # freq_data, freq_time = extracting_data(file, freq_value) 
-        # print(freq_data[0])
 
         # using try-except statement to catch where fault_data[0] is 'None'
         # idea: file may be corrupt or waveform may be weird

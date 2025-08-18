@@ -72,10 +72,19 @@ h5_files = [f for f in os.listdir(folder_path) if f.endswith('.h5')]
 # initializing dictionaries
 rmse_per_cryomodule = {}
 waveform_data_per_cryomodule = {}
+real_quenches_per_cryo = {}   
+fake_quenches_per_cryo = {}
+real_quench_count_new = {}
+fake_quench_count_new = {}
+valid_real_per_cryo = {}
+valid_fake_per_cryo = {}
+valid_misclassification_per_cryo = {}
+misclassified_real = {}
+misclassified_fake = {}
 
-# using a number of sample files to make process shorter
-sample_files = ["06", "31"]
-filtered_h5_files = [f for f in h5_files if any(cm in f for cm in sample_files)]
+# # using a number of sample files to make process shorter
+# sample_files = ["06", "31"]
+# filtered_h5_files = [f for f in h5_files if any(cm in f for cm in sample_files)]
 
 # for file in h5_files:
 for file in h5_files:
@@ -94,15 +103,21 @@ for file in h5_files:
     # initializing lists for classification validation
     rmse_values = []
     r2_values = []
+
     current_classifications = []
+    real_quenches_per_cryo[cryo] = 0
+    fake_quenches_per_cryo[cryo] = 0
+
     new_classifications = []
-    real_quench_count = 0
-    fake_quench_count = 0
-    real_quench_count_new = 0
-    fake_quench_count_new = 0
-    valid_real = 0
-    valid_fake = 0
-    valid_misclassification = 0
+    real_quench_count_new[cryo] = 0
+    fake_quench_count_new[cryo] = 0
+
+    valid_real_per_cryo[cryo] = 0
+    valid_fake_per_cryo[cryo] = 0
+    
+    valid_misclassification_per_cryo[cryo] = 0
+    misclassified_real[cryo] = 0
+    misclassified_fake[cryo] = 0
 
     with h5py.File(file_path, 'r') as f:
 
@@ -154,28 +169,28 @@ for file in h5_files:
 
                                 # determining statistics for new classification
                                 if new_classification == True:
-                                    real_quench_count_new += 1
+                                    real_quench_count_new[cryo] += 1
                                 else: 
-                                    fake_quench_count_new += 1
+                                    fake_quench_count_new[cryo] += 1
 
                                 # determining statistics for current classification
                                 if current_classification == True:
-                                    real_quench_count += 1
+                                    real_quenches_per_cryo[cryo] += 1
                                 else:
-                                    fake_quench_count += 1
+                                    fake_quenches_per_cryo[cryo] += 1
 
                                 # determining statistics for misclassifications
                                 if new_classification == current_classification:
                                     if new_classification == True:
-                                        valid_real += 1
+                                        valid_real_per_cryo[cryo] += 1
                                     else:
-                                        valid_fake += 1
+                                        valid_fake_per_cryo[cryo] += 1
                                 else:
-                                    valid_misclassification += 1
-                                    # if new_classification == True:
-                                    #     valid_real += 1
-                                    # else: 
-                                    #     valid_fake += 1
+                                    valid_misclassification_per_cryo[cryo] += 1
+                                    if new_classification == True:
+                                        misclassified_real[cryo] += 1
+                                    else: 
+                                        misclassified_fake[cryo] += 1
 
                                 full_timestamp = f"{cavity}-{year}-{month}-{day}-{quench_timestamp}"
                                 quench_names.append(full_timestamp)
@@ -201,10 +216,27 @@ waveform_data_per_cryomodule[file_path] = {
     'time': time_waveforms,
 }
 
+# lists for current method
+all_cryomodules = list(real_quenches_per_cryo.keys())
+real_counts_current = [real_quenches_per_cryo[cm] for cm in all_cryomodules]
+fake_counts_current = [fake_quenches_per_cryo[cm] for cm in all_cryomodules]
+
+# lists for new method
+real_counts_new = [real_quench_count_new[cm] for cm in all_cryomodules]
+fake_counts_new = [fake_quench_count_new[cm] for cm in all_cryomodules]
+
+# lists for statistics including misclassifications
+valid_real = [valid_real_per_cryo[cm] for cm in all_cryomodules]
+valid_fake = [valid_fake_per_cryo[cm] for cm in all_cryomodules]
+valid_misclassification = [valid_misclassification_per_cryo[cm] for cm in all_cryomodules]
+
+# lists for misclassifications details
+misclassification_real = [misclassified_real[cm] for cm in all_cryomodules]
+misclassification_fake = [misclassified_fake[cm] for cm in all_cryomodules]
+
 # plotting pie chart with real, fake, and misclassifications
-# pie chart of real vs fake classified quenches in the whole machine
 labels = ['Real Quenches', 'Fake Quenches', 'Misclassified Quenches']
-sizes = [valid_real, valid_fake, valid_misclassification]
+sizes = [sum(valid_real), sum(valid_fake), sum(valid_misclassification)]
 colors = ['#4daf4a', '#e41a1c', '#999999']
 fig4, ax4 = plt.subplots()
 ax4.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
@@ -214,22 +246,32 @@ plt.show()
 
 # plotting pie chart with real and fake classifications from current method
 labels = ['Real Quenches', 'Fake Quenches']
-sizes = [real_quench_count, fake_quench_count]
+sizes = [sum(real_counts_current), sum(fake_counts_current)]
 colors = ['#4daf4a', '#e41a1c']
-fig4, ax4 = plt.subplots()
-ax4.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-ax4.set_title('Overall Quench Classification CM01-CM35 (2022-2025)')
-ax4.axis('equal')   # equal aspect ratio makes the pie chart a circle
+fig5, ax5 = plt.subplots()
+ax5.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+ax5.set_title('Quench Classifications with Current Method CM01-CM35 (2022-2025)')
+ax5.axis('equal')   # equal aspect ratio makes the pie chart a circle
 plt.show()
 
 # plotting pie chart with real and fake classifications from new method
 labels = ['Real Quenches', 'Fake Quenches']
-sizes = [real_quench_count_new, fake_quench_count_new]
+sizes = [sum(real_counts_new), sum(fake_counts_new)]
 colors = ['#4daf4a', '#e41a1c']
-fig4, ax4 = plt.subplots()
-ax4.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-ax4.set_title('Overall Quench Classification CM01-CM35 (2022-2025)')
-ax4.axis('equal')   # equal aspect ratio makes the pie chart a circle
+fig6, ax6 = plt.subplots()
+ax6.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+ax6.set_title('Quench Classifications with New Method CM01-CM35 (2022-2025)')
+ax6.axis('equal')   # equal aspect ratio makes the pie chart a circle
+plt.show()
+
+# plotting real, fake, misclassified real, and misclassified fake from comparisons
+labels = ['Real Quenches', 'Fake Quenches', 'Misclassified as Fake (Real)', 'Misclassified as Real (Fake)']
+sizes = [sum(valid_real), sum(valid_fake), sum(misclassification_real), sum(misclassification_fake)]
+colors = ['#4daf4a', '#e41a1c', '#377eb8','#ff7f00']
+fig6, ax6 = plt.subplots()
+ax6.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+ax6.set_title('Quench Classifications with New Method CM01-CM35 (2022-2025)')
+ax6.axis('equal')   # equal aspect ratio makes the pie chart a circle
 plt.show()
 
 # # plotting both real and fake quench data on bar chart (LOG SCALE)
