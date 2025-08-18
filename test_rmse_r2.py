@@ -12,8 +12,8 @@ The goal is to determine a threshold RMSE value above which the classification o
 
 Questions answered with this plot:
 (1) How many quenches were falsely classified?
-(2) Above what RMSE value are we certain that the quenches are real?
-(3) Is RMSE Value alone 
+(2) How can we combine RMSE Value and R-Squared Score be used to improve classification?
+(3) What is the RMSE Average Value per cavity in the accelerator?
 """
 
 def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
@@ -77,6 +77,10 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
 folder_path = "C:/Users/leila/Documents/Visual Studio/slac_quenches_2025/quench_data_per_cryomodule"
 h5_files = [f for f in os.listdir(folder_path) if f.endswith('.h5')]
 
+# Dictionary to store results
+# Structure: { "CMxx": { "CAVx": avg_rmse, ... }, ... }
+cm_cavity_rmse_dict = {}
+
 for file in h5_files:
     file_path = os.path.join(folder_path, file)
     print(f"\nProcessing: {file_path} - {os.path.basename(file_path)}")
@@ -85,75 +89,86 @@ for file in h5_files:
     with h5py.File(file_path, 'r') as f:
 
         for cavity in f.keys():
+            cavity_group = f[cavity]
+            
+            # initializing lists
+            rmse_values = []
+            r2_values = []
+            cavity_list = []
+            cls_list = []
+            ts_cls_list = []
 
-            if cryo == "31" and cavity == "CAV8":    # focusing on one cryomodule as a sample for observation
-                cavity_group = f[cavity]
-                
-                # initializing lists
-                rmse_values = []
-                r2_values = []
-                cavity_list = []
-                cls_list = []
-                ts_cls_list = []
+            for year in cavity_group.keys():
+                year_group = cavity_group[year]
 
-                for year in cavity_group.keys():
-                    year_group = cavity_group[year]
+                for month in year_group.keys():
+                    month_group = year_group[month]
 
-                    for month in year_group.keys():
-                        month_group = year_group[month]
+                    for day in month_group.keys():
+                        day_group = month_group[day]
 
-                        for day in month_group.keys():
-                            day_group = month_group[day]
+                        for quench_timestamp in day_group.keys():
+                            quench_group = day_group[quench_timestamp]
 
-                            for quench_timestamp in day_group.keys():
-                                quench_group = day_group[quench_timestamp]
+                            try:
+                                # getting waveform data
+                                time_data = quench_group['time_seconds'][:]
+                                cavity_data = quench_group['cavity_amplitude_MV'][:]
+                                q_value = quench_group.attrs.get("saved_q_value")
 
-                                try:
-                                    # getting waveform data
-                                    time_data = quench_group['time_seconds'][:]
-                                    cavity_data = quench_group['cavity_amplitude_MV'][:]
-                                    q_value = quench_group.attrs.get("saved_q_value")
+                                # saving metadata
+                                classification = quench_group.attrs.get("quench_classification", None)
 
-                                    # saving metadata
-                                    classification = quench_group.attrs.get("quench_classification", None)
+                                # calculating error metrics
+                                rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_value, frequency=1300000000.0)
+                                rmse_values.append(rmse)
+                                r2_values.append(r2)
+                                ts_cls_list.append(f"{year}-{month}-{day}-{quench_timestamp} {classification}")
+                                cavity_list.append(cavity)
+                            except Exception as e:
+                                continue
+            
+            if rmse_values:
+                avg_rmse = float(np.mean(rmse_values))
 
-                                    # calculating error metrics
-                                    rmse, r2 = validate_quench(cavity_data, time_data, saved_loaded_q=q_value, frequency=1300000000.0)
-                                    rmse_values.append(rmse)
-                                    r2_values.append(r2)
-                                    ts_cls_list.append(f"{year}-{month}-{day}-{quench_timestamp} {classification}")
-                                    cavity_list.append(cavity)
-                                except Exception as e:
-                                    continue
-                
-                # plotting per cavity after all quenches processed
-                if rmse_values and r2_values:
-                    fig, ax1 = plt.subplots(figsize=(16, 6))
+                if cryo not in cm_cavity_rmse_dict:
+                    cm_cavity_rmse_dict[cryo] = {}
+                cm_cavity_rmse_dict[cryo][cavity] = avg_rmse
 
-                    # RMSE line (left y-axis)
-                    ax1.set_xlabel("Quench Timestamp")
-                    ax1.set_ylabel("RMSE", color="tab:blue")
-                    ax1.plot(ts_cls_list, rmse_values, marker='o', color="tab:blue", label="RMSE")
-                    ax1.tick_params(axis='y', labelcolor="tab:blue")
+            # # plotting per cavity after all quenches processed
+            # if rmse_values and r2_values:
+            #     fig, ax1 = plt.subplots(figsize=(16, 6))
 
-                    # Average RMSE line
-                    avg_rmse = sum(rmse_values) / len(rmse_values)
-                    ax1.axhline(avg_rmse, color="tab:blue", linestyle="--", alpha=0.6, label=f"Avg RMSE: {avg_rmse:.3f}")
+            #     # RMSE line (left y-axis)
+            #     ax1.set_xlabel("Quench Timestamp")
+            #     ax1.set_ylabel("RMSE", color="tab:blue")
+            #     ax1.plot(ts_cls_list, rmse_values, marker='o', color="tab:blue", label="RMSE")
+            #     ax1.tick_params(axis='y', labelcolor="tab:blue")
 
-                    # R² line (right y-axis)
-                    ax2 = ax1.twinx()
-                    ax2.set_ylabel("R² Score", color="tab:orange")
-                    ax2.set_ylim(-2.5, 2.5)
-                    ax2.plot(ts_cls_list, r2_values, marker='x', color="tab:orange", label="R²")
-                    ax2.tick_params(axis='y', labelcolor="tab:orange")
+            #     # Average RMSE line
+            #     avg_rmse = sum(rmse_values) / len(rmse_values)
+            #     ax1.axhline(avg_rmse, color="tab:blue", linestyle="--", alpha=0.6, label=f"Avg RMSE: {avg_rmse:.3f}")
 
-                    plt.title(f"RMSE Value and R-Squared Score for CM{cryo} {cavity} Quenches")
-                    fig.autofmt_xdate(rotation=90)
+            #     # R² line (right y-axis)
+            #     ax2 = ax1.twinx()
+            #     ax2.set_ylabel("R² Score", color="tab:orange")
+            #     ax2.set_ylim(-2.5, 2.5)
+            #     ax2.plot(ts_cls_list, r2_values, marker='x', color="tab:orange", label="R²")
+            #     ax2.tick_params(axis='y', labelcolor="tab:orange")
 
-                    # Combine legends
-                    lines1, labels1 = ax1.get_legend_handles_labels()
-                    lines2, labels2 = ax2.get_legend_handles_labels()
-                    ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
+            #     plt.title(f"RMSE Value and R-Squared Score for CM{cryo} {cavity} Quenches")
+            #     fig.autofmt_xdate(rotation=90)
 
-                    plt.tight_layout()
-                    plt.show()
+            #     # Combine legends
+            #     lines1, labels1 = ax1.get_legend_handles_labels()
+            #     lines2, labels2 = ax2.get_legend_handles_labels()
+            #     ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
+
+            #     plt.tight_layout()
+            #     plt.show()
+
+# # Print final dictionary
+# print("\nAverage RMSE per cavity per cryomodule:")
+# for cm, cavities in cm_cavity_rmse_dict.items():
+#     for cav, avg_rmse in cavities.items():
+#         print(f"CM{cm} - {cav}: {avg_rmse:.4f}")
