@@ -8,6 +8,11 @@ import time
 from datetime import datetime
 import pandas as pd
  
+"""
+THIS CODE IS FOR LOOPING THROUGH QUENCH FILES IN GOOGLE DRIVE AND VALIDATING THEM WITH 
+THE CURRENT VALIDATION METHOD
+"""
+
 # to extract data using a directory:
 directory_path = r"G:\My Drive\ACCL_L3B_3180"
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6

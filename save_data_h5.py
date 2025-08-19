@@ -7,6 +7,11 @@ import h5py
 import os
 import time
 
+"""
+THIS CODE SCRIPT IS FOR SAVING SYSTEM QUENCH DATA TO HDF5 FILES FOR A MORE
+EFFICIENT AND RELIABLE WAVEFORM EXTRACTION AND VALIDATION
+"""
+
 CM_num = "33"                       # CHANGES FOR EACH FILE/CRYOMODULE
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6    # fixed value to determine threshold
 

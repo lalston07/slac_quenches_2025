@@ -6,6 +6,11 @@ import re
 import os
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6
 
+"""
+THIS CODE SCRIPT IS FOR EVALUATING RMSE VALUES FOR REAL AND FAKE QUENCHES
+AND FINDING PATTERNS IN THE RESULTS
+"""
+
 def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
     # starts the time closer to when the quench happens to make the fit more accurate
     time_0 = 0
