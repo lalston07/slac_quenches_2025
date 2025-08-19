@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import re
 import os
-from test_rmse_r2 import cm_cavity_rmse_dict
+from avg_rmse_per_cav import cm_cavity_rmse_dict
 LOADED_Q_CHANGE_FOR_QUENCH = 0.6
 
 def updated_validate_quench(fault_data, time_data, saved_loaded_q, frequency, avg_RMSE):
