@@ -54,7 +54,7 @@ def validate_quench(fault_data, time_data, saved_loaded_q, frequency):
 
 
 """
-Questions answered with these plot:
+Questions answered with these plots:
     (1) Which cryomodule quenched the most?
     (2) How many real quenches per cryomodule?
     (3) How many fake quenches per cryomodule?
@@ -130,6 +130,21 @@ for file in h5_files:
 
 for cryomodule, count in quench_counts_per_cryo.items():   
     print(f"{cryomodule}: {count} total quenches")
+
+# BOX PLOT to show subset of cavity data on one graph
+labels = []
+data = []
+for cryo_label, cavities in quenches_per_cavity.items():
+    labels.append(cryo_label)               # lables are the x-axis
+    data.append(list(cavities.values()))    # nested dictionary values is now in a list
+fig9, ax9 = plt.subplots(figsize=(15,6))
+ax9.boxplot(data)
+ax9.set_xticklabels(labels, rotation=45)
+ax9.set_ylim(0,1250)
+ax9.set_xlabel("Cryomodule Number", fontsize=14)
+ax9.set_ylabel("Number of Quenches per Cavity", fontsize=14)
+ax9.set_title("Quench Distributions per Cryomodule", fontsize=14)
+plt.show()
 
 # plot for quenches per cryomodule
 fig1, ax1 = plt.subplots(figsize=(12,6))

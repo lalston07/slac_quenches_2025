@@ -46,21 +46,12 @@ def updated_validate_quench(fault_data, time_data, saved_loaded_q, frequency, av
     rmse = np.sqrt(np.mean((fault_data - fitted_amplitude)**2))
     r2 = 1 - (np.sum((fault_data - fitted_amplitude)**2) / np.sum((fault_data - np.mean(fault_data))**2))
 
-    if rmse > avg_RMSE:
-        if 0 < r2 < 0.5:
-            new_classification = False 
-        elif -20 < r2 < 0:
+    # correcting the classification only in this case
+    if rmse > avg_RMSE and -20 < r2 < 0:
             new_classification = False
-        elif r2 <= -20:     # range is -inf to -20
-            new_classification = True
-        else:               # if r2 > 0.5
-            new_classification = True 
+    elif rmse > avg_RMSE and r2 <= -20:
+        new_classification = True
     else:
-        if r2 < 0:
-            new_classification = False
-        elif r2 >= 0.5:
-            new_classification = False
-        else:   # if r2 > 0.5
-            new_classification = False
+        new_classification = is_real
 
     return new_classification, rmse, r2
