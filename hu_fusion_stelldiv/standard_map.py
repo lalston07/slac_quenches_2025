@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import fsolve, root_scalar
 
 # initializing constants
-TWOPI = 2 * np.pi
+# TWOPI = 2 * np.pi
 
 # parameters 
 # K = 0   # start with "k/TWOPI = 0" for initial conditions, then increase to reproduce images
@@ -117,16 +117,15 @@ def generate_points_grid(K, n_theta=20, n_p=20, n_iter=2000, n_transient=500):
     return np.array(thetas), np.array(ps)
 
 
-
 if __name__ == "__main__":
     # parameters for 'generate_points'
-    K_values = [0.5, 1.0, 2.5]  # trying different values of K
+    K_values = [0, 0.5, 1.0]  # trying different values of K
     n_ic = 80                   # number of trajectories
     n_iter = 2000               # steps per trajectory
     n_transient = 400           # discarded transients
 
     # parameters for 'generate_points_grid'
-    K_values = [0.5, 1.0, 2.5]  # values of K for different dynamical regimes
+    K_values = [0, 0.5, 1.0]  # values of K for different dynamical regimes
     n_theta = 20                # grid resolution in theta
     n_p = 20                    # grid resolution in p
     n_iter = 2000               # iterations per trajectory

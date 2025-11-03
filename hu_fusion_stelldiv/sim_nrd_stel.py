@@ -77,8 +77,8 @@ def poincare_section_fieldline(radius=0.2, n_iterations=100):
 
     # Initial conditions
     # radii = [0.7, 1.0, 1.3]  # Example radii for phase portraits
-    # radii = [0.86]
-    radii = [radius]
+    radii = [0.86, 0.88]
+    # radii = [radius]
     zeta_initial = 0.0
     theta_initial = 0.0
     

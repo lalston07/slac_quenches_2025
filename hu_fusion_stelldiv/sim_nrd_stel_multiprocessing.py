@@ -142,7 +142,11 @@ def poincare_section_fieldline(radius = 0.2, n_iterations = 100):
     # psi_t = np.pi * r**2 * Bc # Toroidal flux
     # theta = theta_initial
     # zeta = zeta_initial
-    trajectory = [(psi_t, theta, zeta)]
+    trajectory = [(psi_t, theta, zeta)] # THIS IS THE LINE THAT CREATES THE TRAJECTORY AROUND IN THE DEVICE
+    # COORDINATE TRANSFORMATION FROM THIS (FLUX SURFACE COORDINATES) TO R and Z (CYCLINDRICAL COORDINATES) 
+    # TRAJECTORY IS AN ARRAY (dimensions number of points x three)
+    # AFTER COORDINATE TRANSFORMATION THERE WILL BE (number of points x two for R and Z)
+    # START WITH 1000 or 2000 points at a smaller radius r=0.4 close to axis (well-defined frequencies) to use in fft.py file
 
     # reset data for each radius
     # phase_data = []
