@@ -237,8 +237,8 @@ def poincare_section_fieldline(radius = 0.6, n_iterations = 1000):
         fmt='%.18e', delimiter=' ', newline='\n')
 
     # THESE LINES OF CODE SAVE THE TRAJECTORY DATA
-    np.array(trajectory).dump(open(f"trajectory_r={r:.2f}.npy", 'wb'))
-    np.savetxt(f"trajectory_r={r:.2f}.txt", np.array(trajectory).squeeze(), \
+    np.array(trajectory).dump(open(f"trajectory_r={radius:.2f}.npy", 'wb'))
+    np.savetxt(f"trajectory_r={radius:.2f}.txt", np.array(trajectory).squeeze(), \
         fmt='%.18e', delimiter=' ', newline='\n')
     print(f"Saved file for radius = {radius:.4f}")
 

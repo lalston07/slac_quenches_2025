@@ -19,11 +19,18 @@ import time
 # radii_res4 = []
 # radii = np.append(np.append(radii_res1, radii_res2), np.append(radii_res3, radii_res4))
 
-radii_res1 = []
-radii_res2 = np.linspace(0.86, 0.90, 3)
+# radii_res1 = []
+# radii_res2 = np.linspace(0.86, 0.90, 3)
+# radii_res3 = []
+# radii_res4 = []
+# radii = np.append(np.append(radii_res1, radii_res2), np.append(radii_res3, radii_res4))
+
+radii_res1 = [0.6]
+radii_res2 = []
 radii_res3 = []
 radii_res4 = []
 radii = np.append(np.append(radii_res1, radii_res2), np.append(radii_res3, radii_res4))
+
 
 #next compute the res1, radius = 0.05 to 0.85
 

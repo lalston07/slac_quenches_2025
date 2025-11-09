@@ -169,6 +169,8 @@ zeta = np.linspace(0, num_turns * 2 * np.pi, num_points)
 # Mode 1: m=2, n=1 -> ω = 2 * 0.42 - 1 = -0.16. Amplitude Z_21 = 0.6
 # Mode 2: m=3, n=1 -> ω = 3 * 0.42 - 1 = 0.26. Amplitude Z_31 = 0.3
 # Mode 3: m=4, n=2 -> ω = 4 * 0.42 - 2 = -0.32. Amplitude Z_42 = 0.2
+"""
+# THIS IS THE WAY DR NAIK MANUALLY CALCULATED THE TRAJCTORIES
 w21 = -0.16
 w31 = 0.26
 w42 = -0.32
@@ -178,12 +180,15 @@ z42 = 0.2
 Z_zeta = (z21 * np.cos(w21 * zeta) +
           z31 * np.cos(w31 * zeta) + 
           z42 * np.cos(w42 * zeta))
+"""
 
 # R(ζ) modes:
 # A large constant term for the major radius plus some oscillations.
 # Mode 1: m=1, n=0 -> ω = 1 * 0.42 - 0 = 0.42. Amplitude R_10 = 0.8 (ellipticity)
 # Mode 2: m=2, n=1 -> ω = 2 * 0.42 - 1 = -0.16. Amplitude R_21 = 0.2 (same ω as a Z mode)
 # Mode 3: m=3, n=2 -> ω = 3 * 0.42 - 2 = -0.74. Amplitude R_32 = 0.1
+"""
+# THIS IS THE WAY DR NAIK MANUALLY CALCULATED THE TRAJECTORIES
 w10 = 0.42
 w21 = -0.16
 w32 = -0.74
@@ -194,19 +199,61 @@ R_zeta = (major_radius +
           r10 * np.cos(w10 * zeta) +
           r21 * np.cos(w21 * zeta) + 
           r32 * np.cos(w32 * zeta))
+"""
+
+def flux_to_cylindrical(file_path):
+    """
+    Loads data from sim_nrd_stel_multiprocessing.py, assumes that the first three columns are (psi_t, theta, zeta),
+    and convertes them to cartesian coordinates (x, y).
+
+    Args: file_path (str): The path to the input file.
+
+    Returns: 
+        numpy.darray: A NumPy array containing the original data with the 
+                      first three columns relaced by x and y.
+                      Returns None if the file cannot be loaded or processed.
+    """
+    try: 
+        # Load the data from the file, skipping the header line (ip applicable)
+        # Assuming the data is space-separated
+        # data = np.loadtxt(file_path, skiprows=1) # my text file does not have any headers to skip
+        data = np.loadtxt(file_path)
+
+        # STEP ONE - Extract the first three columns (psi_t, theta, zeta)
+        psi_t = data[:, 0]
+        theta = data [:, 1]
+        zeta = data[:, 2]
+
+        # STEP TWO - Converting to cylinderical coordinates
+        R = major_radius + minor_radius*np.sqrt(psi_t)*np.cos(theta)
+        Z = np.sqrt(psi_t)*np.sin(theta)
+        zeta = zeta
+
+        # STEP THREE - Create a new array with the converted coordinates and the rest of the original data
+        # We replace the first three columns with R, Z, theta
+        converted_data = np.hstack((R[:, np.newaxis], Z[:, np.newaxis], zeta[:, np.newaxis], data[:, 3:]))
+
+        return converted_data
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
 
 def convert_to_cylindrical(file_path):
     """
-    Loads data from a file, assumes the first three columns are Cartesian (x, y, z),
-    and converts them to cylindrical coordinates (R, Z, theta).
+    Loads data from a file, assumes the first three columns are Flux Coordinates (psi_t, theta, zeta),
+    and converts them to cylindrical coordinates (R, Z, zeta).
+    # psi_t is a toroidal flux
+    # theta is poloidal angle
+    # zeta is toroidal angle
 
     Args:
         file_path (str): The path to the input file.
 
     Returns:
         numpy.ndarray: A NumPy array containing the original data with the
-                       first three columns replaced by R, Z, and theta.
+                       first three columns replaced by R, Z, and zeta.
                        Returns None if the file cannot be loaded or processed.
     """
     try:
@@ -214,7 +261,7 @@ def convert_to_cylindrical(file_path):
         # Assuming the data is space-separated
         data = np.loadtxt(file_path, skiprows=1)
 
-        # Extract the first three columns (x, y, z)
+        # Extract the first three columns (psi_t, theta, zeta)
         psi_t = data[:, 0]
         theta = data[:, 1]
         zeta = data[:, 2]
@@ -227,7 +274,7 @@ def convert_to_cylindrical(file_path):
 
         # Create a new array with the converted coordinates and the rest of the original data
         # We replace the first three columns with R, Z, theta
-        converted_data = np.hstack((R[:, np.newaxis], Z[:, np.newaxis], theta[:, np.newaxis], data[:, 3:]))
+        converted_data = np.hstack((R[:, np.newaxis], Z[:, np.newaxis], zeta[:, np.newaxis], data[:, 3:]))
 
         return converted_data
 
@@ -236,8 +283,10 @@ def convert_to_cylindrical(file_path):
         return None
 
 # Example usage with your file:
-# file_path = "./test-fortran/trajectories_r= 0.6000_n_iter=1-100.txt"
+file_path = "trajectory_r=0.60.txt"
+
 # cylindrical_coordinates_data = convert_to_cylindrical(file_path)
+cylindrical_coordinates_data = flux_to_cylindrical(file_path)
 
 # if cylindrical_coordinates_data is not None:
 #     print("Conversion successful. Here's a sample of the converted data (R, Z, theta, ...):")
@@ -246,10 +295,10 @@ def convert_to_cylindrical(file_path):
 #     print("Failed to convert data.")
 
 
-# # --- Step 2: Convert cylindrical coordinates (R, ζ, Z) to Cartesian (X, Y, Z) ---
-# R_zeta = cylindrical_coordinates_data[:,0]
-# Z_zeta = cylindrical_coordinates_data[:,1]
-# zeta = cylindrical_coordinates_data[:,2]
+# --- Step 2: Convert cylindrical coordinates (R, ζ, Z) to Cartesian (X, Y, Z) ---
+R_zeta = cylindrical_coordinates_data[:,0]
+Z_zeta = cylindrical_coordinates_data[:,1]
+zeta = cylindrical_coordinates_data[:,2]
 
 
 # 3. INSTANTIATE THE ANALYSER
