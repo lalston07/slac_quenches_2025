@@ -93,7 +93,7 @@ def hamiltonian_map(psi_t, theta, zeta, e0, et, ex, iota0):
 
     return psi_t_next, theta_next, zeta_next
        
-def poincare_section_fieldline(radius = 0.2, n_iterations = 100):
+def poincare_section_fieldline(radius = 0.6, n_iterations = 1000):
     # Initial conditions
     psi_t = np.pi * radius**2 * Bc      # Initial psi_t or toroidal flux
     theta = theta_initial               # Initial theta = 0.0
@@ -146,7 +146,7 @@ def poincare_section_fieldline(radius = 0.2, n_iterations = 100):
     # COORDINATE TRANSFORMATION FROM THIS (FLUX SURFACE COORDINATES) TO R and Z (CYCLINDRICAL COORDINATES) 
     # TRAJECTORY IS AN ARRAY (dimensions number of points x three)
     # AFTER COORDINATE TRANSFORMATION THERE WILL BE (number of points x two for R and Z)
-    # START WITH 1000 or 2000 points at a smaller radius r=0.4 close to axis (well-defined frequencies) to use in fft.py file
+    # START WITH 1000 or 2000 points at a smaller radius r=0.5, 0.6, 0.7 close to axis (well-defined frequencies) to use in fft.py file
 
     # reset data for each radius
     # phase_data = []
@@ -236,9 +236,10 @@ def poincare_section_fieldline(radius = 0.2, n_iterations = 100):
     np.savetxt(f"numba_phase_portrait_zeta_3pi_over4_r={radius:.4f}_i={n_iterations:06d}.txt", np.array(phase_data_zeta_3pi_over4).squeeze(), \
         fmt='%.18e', delimiter=' ', newline='\n')
 
-    # np.array(trajectory).dump(open(f"trajectory_r={r:.2f}.npy", 'wb'))
-    # np.savetxt(f"trajectory_r={r:.2f}.txt", np.array(trajectory).squeeze(), \
-    #     fmt='%.18e', delimiter=' ', newline='\n')
+    # THESE LINES OF CODE SAVE THE TRAJECTORY DATA
+    np.array(trajectory).dump(open(f"trajectory_r={r:.2f}.npy", 'wb'))
+    np.savetxt(f"trajectory_r={r:.2f}.txt", np.array(trajectory).squeeze(), \
+        fmt='%.18e', delimiter=' ', newline='\n')
     print(f"Saved file for radius = {radius:.4f}")
 
     # Plot Phase Portraits

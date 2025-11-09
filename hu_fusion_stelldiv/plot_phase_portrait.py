@@ -10,9 +10,9 @@ path_to_data = './'
 # radii = np.append(nonuni_radii, uni_radii)
 # radii_res1 = np.arange(0.05, 0.86, 0.05)
 # radii_res2 = np.arange(0.86, 0.901, 0.01)
-radii_res1 = []
+radii_res1 = [0.6]
 radii_res2 = []
-radii_res3 = np.linspace(0.86, 0.88, 5)
+radii_res3 = []
 radii = np.append(np.append(radii_res1, radii_res2), radii_res3)
 
 Bc = 1.0/np.pi
