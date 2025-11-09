@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 
+import seaborn as sns
+sns.set_style("whitegrid")
+
 # Paste the MagneticFieldLineAnalyser class definition here from the previous response
 class MagneticFieldLineAnalyser:
     """
@@ -133,7 +136,9 @@ class MagneticFieldLineAnalyser:
         res = analysis_results
         coord = res['coordinate']
         
-        plt.style.use('seaborn-whitegrid')
+        # plt.style.use('seaborn-whitegrid') # THIS IS WHAT THE LINE USED TO BE AND IT DIDNT WORK
+        plt.style.use('seaborn-v0_8-whitegrid')
+
         # fig, ax = plt.subplots(figsize=(14, 7))
 
         ax.plot(res['omega_range'], res['transformed_signal'], label=f'$\\mathcal{{F}}[{{{coord}}}(\\zeta)]$')
