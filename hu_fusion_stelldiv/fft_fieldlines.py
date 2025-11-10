@@ -313,7 +313,8 @@ analyser = MagneticFieldLineAnalyser(zeta, R_zeta - major_radius, Z_zeta)
 # 4. RUN ANALYSIS FOR THE 'Z' COORDINATE
 print("--- Analyzing Z(ζ) Coordinate ---")
 # Use a sufficiently large lambda to get narrow peaks for this non-chaotic line
-z_analysis_results = analyser.find_modes(coordinate='Z', lambda_width=100.0)
+z_analysis_results = analyser.find_modes(coordinate='Z', lambda_width=200.0)    # CHANGING LAMBDA HERE
+                                                                                # higher lamba makes width of peaks smaller but too high makes it detect more peaks than exist
 
 # Print the detected peak locations and their amplitudes
 # print(f"Expected Z Frequencies (ω): [{w21:02f}, {w31:02f}, {w42:02f}]")
@@ -331,7 +332,7 @@ analyser.plot_analysis(z_analysis_results, ax[0])
 
 # 6. RUN ANALYSIS FOR THE 'R' COORDINATE
 print("\n--- Analyzing R(ζ) Coordinate ---")
-r_analysis_results = analyser.find_modes(coordinate='R', lambda_width=100.0)
+r_analysis_results = analyser.find_modes(coordinate='R', lambda_width=200.0)    # CHANGING LAMBDA HERE
 
 # Print the detected peak locations and their amplitudes
 # print(f"Expected R Frequencies (ω): [{w10:02f}, {w21:02f}, {w32:02f}]")
