@@ -25,7 +25,7 @@ import time
 # radii_res4 = []
 # radii = np.append(np.append(radii_res1, radii_res2), np.append(radii_res3, radii_res4))
 
-radii_res1 = [0.6]
+radii_res1 = [0.90]
 radii_res2 = []
 radii_res3 = []
 radii_res4 = []

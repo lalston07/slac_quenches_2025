@@ -50,6 +50,7 @@ class MagneticFieldLineAnalyser:
             np.ndarray: The values of the Gaussian window function.
         """
         return np.exp(-0.5 * (zeta_vals / lambda_width)**2)
+        # return np.exp(-0.5 * (zeta_vals * lambda_width)**2)
 
     def calculate_fourier_transform(self, coordinate_vals, omega_range, lambda_width):
         """
@@ -288,7 +289,7 @@ def convert_to_cylindrical(file_path):
         return None
 
 # Example usage with your file:
-file_path = "trajectory_r=0.60.txt"
+file_path = "trajectory_r=0.90_i=001000.txt"
 
 # cylindrical_coordinates_data = convert_to_cylindrical(file_path)
 cylindrical_coordinates_data = flux_to_cylindrical(file_path)
@@ -313,7 +314,7 @@ analyser = MagneticFieldLineAnalyser(zeta, R_zeta - major_radius, Z_zeta)
 # 4. RUN ANALYSIS FOR THE 'Z' COORDINATE
 print("--- Analyzing Z(ζ) Coordinate ---")
 # Use a sufficiently large lambda to get narrow peaks for this non-chaotic line
-z_analysis_results = analyser.find_modes(coordinate='Z', lambda_width=200.0)    # CHANGING LAMBDA HERE
+z_analysis_results = analyser.find_modes(coordinate='Z', lambda_width=10.0)    # CHANGING LAMBDA HERE
                                                                                 # higher lamba makes width of peaks smaller but too high makes it detect more peaks than exist
 
 # Print the detected peak locations and their amplitudes
@@ -332,7 +333,7 @@ analyser.plot_analysis(z_analysis_results, ax[0])
 
 # 6. RUN ANALYSIS FOR THE 'R' COORDINATE
 print("\n--- Analyzing R(ζ) Coordinate ---")
-r_analysis_results = analyser.find_modes(coordinate='R', lambda_width=200.0)    # CHANGING LAMBDA HERE
+r_analysis_results = analyser.find_modes(coordinate='R', lambda_width=10.0)    # CHANGING LAMBDA HERE
 
 # Print the detected peak locations and their amplitudes
 # print(f"Expected R Frequencies (ω): [{w10:02f}, {w21:02f}, {w32:02f}]")
