@@ -175,7 +175,7 @@ zeta = np.linspace(0, num_turns * 2 * np.pi, num_points)
 # Mode 1: m=2, n=1 -> ω = 2 * 0.42 - 1 = -0.16. Amplitude Z_21 = 0.6
 # Mode 2: m=3, n=1 -> ω = 3 * 0.42 - 1 = 0.26. Amplitude Z_31 = 0.3
 # Mode 3: m=4, n=2 -> ω = 4 * 0.42 - 2 = -0.32. Amplitude Z_42 = 0.2
-"""
+
 # THIS IS THE WAY DR NAIK MANUALLY CALCULATED THE TRAJCTORIES
 w21 = -0.16
 w31 = 0.26
@@ -186,14 +186,14 @@ z42 = 0.2
 Z_zeta = (z21 * np.cos(w21 * zeta) +
           z31 * np.cos(w31 * zeta) + 
           z42 * np.cos(w42 * zeta))
-"""
+
 
 # R(ζ) modes:
 # A large constant term for the major radius plus some oscillations.
 # Mode 1: m=1, n=0 -> ω = 1 * 0.42 - 0 = 0.42. Amplitude R_10 = 0.8 (ellipticity)
 # Mode 2: m=2, n=1 -> ω = 2 * 0.42 - 1 = -0.16. Amplitude R_21 = 0.2 (same ω as a Z mode)
 # Mode 3: m=3, n=2 -> ω = 3 * 0.42 - 2 = -0.74. Amplitude R_32 = 0.1
-"""
+
 # THIS IS THE WAY DR NAIK MANUALLY CALCULATED THE TRAJECTORIES
 w10 = 0.42
 w21 = -0.16
@@ -205,7 +205,7 @@ R_zeta = (major_radius +
           r10 * np.cos(w10 * zeta) +
           r21 * np.cos(w21 * zeta) + 
           r32 * np.cos(w32 * zeta))
-"""
+
 
 def flux_to_cylindrical(file_path):
     """
@@ -289,7 +289,7 @@ def convert_to_cylindrical(file_path):
         return None
 
 # Example usage with your file:
-file_path = "trajectory_r=0.90_i=001000.txt"
+file_path = "trajectory_r=0.80_i=001000.txt"
 
 # cylindrical_coordinates_data = convert_to_cylindrical(file_path)
 cylindrical_coordinates_data = flux_to_cylindrical(file_path)
@@ -302,9 +302,9 @@ cylindrical_coordinates_data = flux_to_cylindrical(file_path)
 
 
 # --- Step 2: Convert cylindrical coordinates (R, ζ, Z) to Cartesian (X, Y, Z) ---
-R_zeta = cylindrical_coordinates_data[:,0]
-Z_zeta = cylindrical_coordinates_data[:,1]
-zeta = cylindrical_coordinates_data[:,2]
+# R_zeta = cylindrical_coordinates_data[:,0]
+# Z_zeta = cylindrical_coordinates_data[:,1]
+# zeta = cylindrical_coordinates_data[:,2]
 
 
 # 3. INSTANTIATE THE ANALYSER
