@@ -269,6 +269,14 @@ R_zeta = cylindrical_coordinates_data[:,0]
 Z_zeta = cylindrical_coordinates_data[:,1]
 zeta = cylindrical_coordinates_data[:,2]
 
+# unwrapping zeta into a continuous coordinate
+TWOPI = 2*np.pi
+zeta_unwrapped = zeta.copy()
+for i in range(1, len(zeta_unwrapped)):
+    if zeta_unwrapped[i] < zeta_unwrapped[i-1]: # reset detected
+        zeta_unwrapped[i:] += TWOPI
+zeta = zeta_unwrapped
+
 
 # 3. INSTANTIATE THE ANALYSER
 analyser = MagneticFieldLineAnalyser(zeta, R_zeta - np.mean(R_zeta), Z_zeta - np.mean(Z_zeta))
@@ -308,5 +316,5 @@ print(f"Detected R Amplitudes: {np.round(r_analysis_results['peak_amplitudes'], 
 analyser.plot_analysis(r_analysis_results, ax[1])
 
 fig.subplots_adjust(hspace=0.4) 
-fig.savefig('temp.png', dpi=300, bbox_inches='tight', pad_inches=0)
+fig.savefig('fourier_transform_draft2.png', dpi=300, bbox_inches='tight', pad_inches=0)
 plt.show()
