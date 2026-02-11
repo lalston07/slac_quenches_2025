@@ -284,7 +284,7 @@ analyser = MagneticFieldLineAnalyser(zeta, R_zeta - np.mean(R_zeta), Z_zeta - np
 # 4. RUN ANALYSIS FOR THE 'Z' COORDINATE
 print("--- Analyzing Z(ζ) Coordinate ---")
 # Use a sufficiently large lambda to get narrow peaks for this non-chaotic line
-z_analysis_results = analyser.find_modes(coordinate='Z', lambda_width=10.0)    # CHANGING LAMBDA HERE
+z_analysis_results = analyser.find_modes(coordinate='Z', lambda_width=100.0)    # CHANGING LAMBDA HERE
                                                                                # higher lamba makes width of peaks smaller but too high makes it detect more peaks than exist
 
 # Print the detected peak locations and their amplitudes
@@ -302,7 +302,7 @@ analyser.plot_analysis(z_analysis_results, ax[0])
 
 # 6. RUN ANALYSIS FOR THE 'R' COORDINATE
 print("\n--- Analyzing R(ζ) Coordinate ---")
-r_analysis_results = analyser.find_modes(coordinate='R', lambda_width=10.0)    # CHANGING LAMBDA HERE
+r_analysis_results = analyser.find_modes(coordinate='R', lambda_width=100.0)    # CHANGING LAMBDA HERE
 
 # Print the detected peak locations and their amplitudes
 # print(f"Expected R Frequencies (ω): [{w10:02f}, {w21:02f}, {w32:02f}]")
@@ -316,5 +316,5 @@ print(f"Detected R Amplitudes: {np.round(r_analysis_results['peak_amplitudes'], 
 analyser.plot_analysis(r_analysis_results, ax[1])
 
 fig.subplots_adjust(hspace=0.4) 
-fig.savefig('fourier_transform_draft2.png', dpi=300, bbox_inches='tight', pad_inches=0)
+fig.savefig('fourier_transform_draft3.png', dpi=300, bbox_inches='tight', pad_inches=0)
 plt.show()
